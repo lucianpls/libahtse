@@ -39,3 +39,6 @@
 ipch
 Debug
 Release
+jpeg
+png
+zlib

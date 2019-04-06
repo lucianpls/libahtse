@@ -13,11 +13,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\jpeg12">
-      <UniqueIdentifier>{f2116f31-92a0-4dc0-8f1d-cd96479056c1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\jpeg12">
       <UniqueIdentifier>{6f499be3-b1e9-422e-93b8-3ff043d643c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Support Files">
+      <UniqueIdentifier>{e480f38a-7507-468e-81c8-4579459dabfa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Support Files\jpeg12">
+      <UniqueIdentifier>{e672ff4d-0e22-4954-92bb-f2d0a9e3bb07}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -38,168 +41,6 @@
     </ClCompile>
     <ClCompile Include="src\PNG_codec.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\cdjpeg.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\ckconfig.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcapimin.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcapistd.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jccoefct.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jccolor.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcdctmgr.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jchuff.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcinit.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcmainct.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcmarker.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcmaster.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcomapi.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcparam.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcphuff.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcprepct.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jcsample.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jctrans.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdapimin.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdapistd.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdatadst.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdatasrc.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdcoefct.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdcolor.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jddctmgr.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdhuff.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdinput.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdmainct.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdmarker.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdmaster.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdmerge.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdphuff.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdpostct.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdsample.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jdtrans.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jerror.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jfdctflt.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jfdctfst.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jfdctint.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jidctflt.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jidctfst.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jidctint.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jidctred.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jmemansi.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jmemdos.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jmemmgr.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jmemname.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jmemnobs.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jquant1.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jquant2.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\jutils.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\rdcolmap.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\rdjpgcom.c">
-      <Filter>Source Files\jpeg12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg12-6b\transupp.c">
-      <Filter>Source Files\jpeg12</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -248,5 +89,22 @@
     <ClInclude Include="src\jpeg12-6b\jversion.h">
       <Filter>Header Files\jpeg12</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LICENSE">
+      <Filter>Support Files</Filter>
+    </None>
+    <None Include="README.md">
+      <Filter>Support Files</Filter>
+    </None>
+    <None Include=".gitattributes">
+      <Filter>Support Files</Filter>
+    </None>
+    <None Include=".gitignore">
+      <Filter>Support Files</Filter>
+    </None>
+    <None Include="src\jpeg12-6b\makefile.vc">
+      <Filter>Support Files\jpeg12</Filter>
+    </None>
   </ItemGroup>
 </Project>
