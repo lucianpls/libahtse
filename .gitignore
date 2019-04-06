@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+# VS stuff
+.vs
+*.user
+*.suo
+*.sdf
+ipch
+Debug
+Release
