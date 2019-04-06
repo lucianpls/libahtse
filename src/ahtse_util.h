@@ -10,9 +10,10 @@
 #define AHTSE_UTIL_H
 #include "ahtse.h"
 #include <httpd.h>
-#include <apr.h>
 #include <apr_tables.h>
 #include <apr_pools.h>
+
+NS_AHTSE_START
 
 // Always include httpd.h before other http* headers
 // #include <httpd.h>
@@ -42,75 +43,6 @@
     return HTTP_INTERNAL_SERVER_ERROR;\
 }
 
-#if defined(DEBUG)
-#define LOG(r, msg, ...) {\
-    ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, msg, ##__VA_ARGS__);\
-}
-#else
-#define LOG()
-#endif
-
-// Separate channels and level, just in case
-struct sz {
-    apr_int64_t x, y, z, c, l;
-};
-
-struct bbox_t {
-    double xmin, ymin, xmax, ymax;
-};
-
-typedef struct {
-    char *buffer;
-    int size;
-} storage_manager;
-
-struct empty_conf_t {
-    // Empty tile in RAM, if defined
-    storage_manager empty;
-    // Buffer for the empty tile etag
-    char eTag[16];
-};
-
-struct TiledRaster {
-    // Size and pagesize of the raster
-    struct sz size, pagesize;
-
-    // Generic data values
-    double ndv, min, max;
-    int has_ndv, has_min, has_max;
-
-    // how many levels from full size, computed
-    int n_levels;
-    // width and height for each pyramid level
-    struct rset *rsets;
-    // How many levels to skip at the top of the pyramid
-    int skip;
-    GDALDataType datatype;
-
-    // geographical projection
-    const char *projection;
-    struct bbox_t bbox;
-
-    // ETag initializer
-    apr_uint64_t seed;
-    // The Empty tile etag in string form, derived from seed
-    empty_conf_t missing;
-};
-
-struct rset {
-    // Resolution, units per pixel
-    double rx, ry;
-    // In tiles
-    int w, h;
-};
-
-// Return a GDAL data type by name
-GDALDataType getDT(const char *name);
-
-// Populates size and returns null if it works, error message otherwise
-// "x y", "x y z" or "x y z c"
-const char *get_xyzc_size(struct sz *size, const char *s);
-
 // Add the compiled pattern tot the regexp array.  It allocates the array if necessary
 const char *add_regexp_to_array(apr_pool_t *pool, apr_array_header_t **parr, const char *pattern);
 
@@ -122,9 +54,6 @@ apr_table_t *readAHTSEConfig(apr_pool_t *pool, const char *fname, const char **e
 
 // Initialize a raster from a kvp table
 const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, struct TiledRaster &raster);
-
-// Return a GDALDataType from a name, or GDT_Byte
-GDALDataType getDT(const char *name);
 
 // Reads a bounding box, x,y,X,Y order.  Expects up to four numbers in C locale, comma separated
 const char *getBBox(const char *line, bbox_t &bbox);
@@ -166,31 +95,12 @@ int sendEmptyTile(request_rec *r, const empty_conf_t &empty);
 
 enum img_fmt { IMG_JPEG, IMG_JPEG_ZEN, IMG_PNG };
 
-//
-// Any decoder needs a static place for an error message and a line stride when decoding
-// This structure is accepted by the decoders, regardless of type
-// For encoders, see format specific extensions below
-//
-
-struct codec_params {
-    // Line size in bytes
-    apr_uint32_t line_stride;
-    // Set if special data handling took place during decoding (zero mask on JPEG)
-    apr_uint32_t modified;
-    // A place for codec error message
-    char error_message[1024];
-};
-
 // In JPEG_codec.cpp
 // raster defines the expected tile
 // src contains the input JPEG
 // buffer is the location of the first byte on the first line of decoded data
 // line_stride is the size of a line in buffer (larger or equal to decoded JPEG line)
 // Returns NULL if everything looks fine, or an error message
-struct jpeg_params : codec_params {
-    int quality;
-};
-
 const char *jpeg_stride_decode(codec_params &params, const TiledRaster &raster, storage_manager &src,
     void *buffer);
 const char *jpeg_encode(jpeg_params &params, const TiledRaster &raster, storage_manager &src,
@@ -224,5 +134,7 @@ int set_def_png_params(const TiledRaster &raster, png_params *params);
 // Skip the leading white spaces and return true for "On" or "1"
 // otherwise it returns false
 int get_bool(const char *s);
+
+NS_AHTSE_END
 
 #endif

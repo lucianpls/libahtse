@@ -5,6 +5,8 @@ extern "C" {
 #include <jerror.h>
 }
 
+NS_AHTSE_START
+
 static void emitMessage(j_common_ptr cinfo, int msgLevel);
 static void errorExit(j_common_ptr cinfo);
 
@@ -289,3 +291,5 @@ const char *jpeg8_encode(jpeg_params &params, const TiledRaster &raster, storage
     return params.error_message[0] != 0 ?
         params.error_message : nullptr;
 }
+
+NS_AHTSE_END

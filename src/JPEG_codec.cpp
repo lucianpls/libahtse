@@ -9,6 +9,8 @@
 
 #include "JPEG_codec.h"
 
+NS_AHTSE_USE
+
 // Look for the JPEG precision, also check a couple of major structural issues
 static int get_precision(storage_manager &src)
 {

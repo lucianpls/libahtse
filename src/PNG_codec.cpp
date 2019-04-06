@@ -13,6 +13,8 @@
 #include <vector>
 #include <png.h>
 
+NS_AHTSE_USE
+
 // TODO: Add palette PNG support, possibly other fancy options
 
 // Memory output doesn't need flushing

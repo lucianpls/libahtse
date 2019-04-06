@@ -7,10 +7,29 @@
 */
 
 #if !defined(AHTSE_H)
-
 #define AHTSE_H
 
-// Define DLL_PUBLIC and DLL_LOCAL, to be used to control symbol visibility
+#include <apr.h>
+
+#define NS_AHTSE_START namespace AHTSE {
+#define NS_AHTSE_END }
+#define NS_AHTSE_USE using namespace AHTSE;
+
+NS_AHTSE_START
+
+#if defined(DEBUG) || defined(_DEBUG)
+#define LOG(r, msg, ...) {\
+    ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, msg, ##__VA_ARGS__);\
+}
+#else
+#define LOG()
+#endif
+//
+// Define DLL_PUBLIC to make a symbol visible
+// Define DLL_LOCAL to hide a symbol
+// Default behavior is system depenent
+//
+
 #if defined _WIN32 || defined __CYGWIN__
   #define DLL_LOCAL
 
@@ -88,7 +107,88 @@ DLL_PUBLIC typedef enum {
 } GDALDataType;
 
 // Size in bytes
-DLL_PUBLIC int GDTGetSize(GDALDataType dt);
+DLL_PUBLIC int GDTGetSize(GDALDataType dt, int num = 1);
 
+// Return a GDAL data type by name
+DLL_PUBLIC GDALDataType getDT(const char *name);
+
+// Separate channels and level, just in case
+struct sz {
+    apr_int64_t x, y, z, c, l;
+};
+
+// Populates size and returns null if it works, error message otherwise
+// "x y", "x y z" or "x y z c"
+DLL_PUBLIC const char *get_xyzc_size(sz *size, const char *value);
+
+struct bbox_t {
+    double xmin, ymin, xmax, ymax;
+};
+
+struct storage_manager {
+    char *buffer;
+    int size;
+};
+
+struct empty_conf_t {
+    // Empty tile in RAM, if defined
+    storage_manager empty;
+    // Buffer for the empty tile etag
+    char eTag[16];
+};
+
+struct TiledRaster {
+    // Size and pagesize of the raster
+    struct sz size, pagesize;
+
+    // Generic data values
+    double ndv, min, max;
+    int has_ndv, has_min, has_max;
+
+    // how many levels from full size, computed
+    int n_levels;
+    // width and height for each pyramid level
+    struct rset *rsets;
+    // How many levels to skip at the top of the pyramid
+    int skip;
+    GDALDataType datatype;
+
+    // geographical projection
+    const char *projection;
+    struct bbox_t bbox;
+
+    // ETag initializer
+    apr_uint64_t seed;
+    // The Empty tile etag in string form, derived from seed
+    empty_conf_t missing;
+};
+
+struct rset {
+    // Resolution, units per pixel
+    double rx, ry;
+    // In tiles
+    int w, h;
+};
+
+//
+// Any decoder needs a static place for an error message and a line stride when decoding
+// This structure is accepted by the decoders, regardless of type
+// For encoders, see format specific extensions below
+//
+
+struct codec_params {
+    // Line size in bytes
+    apr_uint32_t line_stride;
+    // Set if special data handling took place during decoding (zero mask on JPEG)
+    apr_uint32_t modified;
+    // A place for codec error message
+    char error_message[1024];
+};
+
+struct jpeg_params : codec_params {
+    int quality;
+};
+
+NS_AHTSE_END
 
 #endif

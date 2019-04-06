@@ -32,8 +32,9 @@ Obviously not thread safe while any bit gets modified
 #include <stdexcept>
 
 // Defines the storage_manager
-#include "ahtse_util.h"
+#include "ahtse.h"
 
+NS_AHTSE_START
 // A base class that provides import and export functions based on storage managers
 // Default implementation is a straight copy
 class Packer {
@@ -225,5 +226,6 @@ public:
     virtual int store(storage_manager *src, storage_manager *dst) override;
 };
 
+NS_AHTSE_END
 
 #endif

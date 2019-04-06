@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <unordered_map>
 
+NS_AHTSE_START
+
 // Given a data type name, returns a data type
 GDALDataType getDT(const char *name)
 {
@@ -38,7 +40,7 @@ GDALDataType getDT(const char *name)
         return GDT_Byte;
 }
 
-int GDTGetSize(GDALDataType dt) {
+int GDTGetSize(GDALDataType dt, int n) {
     // It is not a multimap, so it doesn't take synonyms
     static const std::unordered_map<GDALDataType, int> size_by_gdt = {
         {GDT_Unknown, -1},
@@ -50,12 +52,12 @@ int GDTGetSize(GDALDataType dt) {
         {GDT_Float32, 4},
         {GDT_Double, 8}
     };
-    return (size_by_gdt.count(dt) == 0) ? -1 : size_by_gdt.at(dt);
+    return n * ((size_by_gdt.count(dt) == 0) ? -1 : size_by_gdt.at(dt));
 }
 
 // Returns NULL if it worked as expected, returns a four integer value from 
 // "x y", "x y z" or "x y z c"
-const char *get_xyzc_size(struct sz *size, const char *value)
+const char *get_xyzc_size(sz *size, const char *value)
 {
     char *s;
     if (!(size && value))
@@ -419,3 +421,5 @@ int get_bool(const char *s) {
         s++;
     return (!ap_cstr_casecmp(s, "On") || !ap_cstr_casecmp(s, "1"));
 }
+
+NS_AHTSE_END

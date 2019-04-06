@@ -1,8 +1,11 @@
 #if !defined(JPEG_CODEC_H)
 #define JPEG_CODEC_H
 
+#include "ahtse.h"
 #include "BitMask2D.h"
 #include <setjmp.h>
+
+NS_AHTSE_START
 
 // Could be used for short int, so make it a template
 template<typename T> int apply_mask(BitMap2D<> *bm, T *ps, int nc = 3, int line_stride = 0) {
@@ -41,20 +44,22 @@ template<typename T> int apply_mask(BitMap2D<> *bm, T *ps, int nc = 3, int line_
     return count;
 }
 
-const char *jpeg8_stride_decode(codec_params &params, const TiledRaster &raster,
+DLL_LOCAL const char *jpeg8_stride_decode(codec_params &params, const TiledRaster &raster,
     storage_manager &src,
     void *buffer);
 
-const char *jpeg8_encode(jpeg_params &params, const TiledRaster &raster,
+DLL_LOCAL const char *jpeg8_encode(jpeg_params &params, const TiledRaster &raster,
     storage_manager &src,
     storage_manager &dst);
 
-const char *jpeg12_stride_decode(codec_params &params, const TiledRaster &raster,
+DLL_LOCAL const char *jpeg12_stride_decode(codec_params &params, const TiledRaster &raster,
     storage_manager &src,
     void *buffer);
 
-const char *jpeg12_encode(jpeg_params &params, const TiledRaster &raster,
+DLL_LOCAL const char *jpeg12_encode(jpeg_params &params, const TiledRaster &raster,
     storage_manager &src,
     storage_manager &dst);
+
+NS_AHTSE_END
 
 #endif

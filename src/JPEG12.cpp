@@ -5,6 +5,8 @@ extern "C" {
 #include "jpeg12-6b/jerror.h"
 }
 
+NS_AHTSE_START
+
 static void emitMessage(j_common_ptr cinfo, int msgLevel);
 static void errorExit(j_common_ptr cinfo);
 
@@ -13,7 +15,7 @@ struct JPGHandle {
     // A place to hold a message
     char *message;
     // Pointer to Zen chunk
-    storage_manager zenChunk;
+    AHTSE::storage_manager zenChunk;
 };
 
 static void emitMessage(j_common_ptr cinfo, int msgLevel)
@@ -290,3 +292,5 @@ const char *jpeg12_encode(jpeg_params &params, const TiledRaster &raster, storag
     return params.error_message[0] != 0 ?
         params.error_message : nullptr;
 }
+
+NS_AHTSE_END
