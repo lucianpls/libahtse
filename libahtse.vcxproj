@@ -18,6 +18,85 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\ahtse_util.cpp" />
+    <ClCompile Include="src\jpeg12-6b\cdjpeg.c" />
+    <ClCompile Include="src\jpeg12-6b\ckconfig.c" />
+    <ClCompile Include="src\jpeg12-6b\jcapimin.c" />
+    <ClCompile Include="src\jpeg12-6b\jcapistd.c" />
+    <ClCompile Include="src\jpeg12-6b\jccoefct.c" />
+    <ClCompile Include="src\jpeg12-6b\jccolor.c" />
+    <ClCompile Include="src\jpeg12-6b\jcdctmgr.c" />
+    <ClCompile Include="src\jpeg12-6b\jchuff.c" />
+    <ClCompile Include="src\jpeg12-6b\jcinit.c" />
+    <ClCompile Include="src\jpeg12-6b\jcmainct.c" />
+    <ClCompile Include="src\jpeg12-6b\jcmarker.c" />
+    <ClCompile Include="src\jpeg12-6b\jcmaster.c" />
+    <ClCompile Include="src\jpeg12-6b\jcomapi.c" />
+    <ClCompile Include="src\jpeg12-6b\jcparam.c" />
+    <ClCompile Include="src\jpeg12-6b\jcphuff.c" />
+    <ClCompile Include="src\jpeg12-6b\jcprepct.c" />
+    <ClCompile Include="src\jpeg12-6b\jcsample.c" />
+    <ClCompile Include="src\jpeg12-6b\jctrans.c" />
+    <ClCompile Include="src\jpeg12-6b\jdapimin.c" />
+    <ClCompile Include="src\jpeg12-6b\jdapistd.c" />
+    <ClCompile Include="src\jpeg12-6b\jdatadst.c" />
+    <ClCompile Include="src\jpeg12-6b\jdatasrc.c" />
+    <ClCompile Include="src\jpeg12-6b\jdcoefct.c" />
+    <ClCompile Include="src\jpeg12-6b\jdcolor.c" />
+    <ClCompile Include="src\jpeg12-6b\jddctmgr.c" />
+    <ClCompile Include="src\jpeg12-6b\jdhuff.c" />
+    <ClCompile Include="src\jpeg12-6b\jdinput.c" />
+    <ClCompile Include="src\jpeg12-6b\jdmainct.c" />
+    <ClCompile Include="src\jpeg12-6b\jdmarker.c" />
+    <ClCompile Include="src\jpeg12-6b\jdmaster.c" />
+    <ClCompile Include="src\jpeg12-6b\jdmerge.c" />
+    <ClCompile Include="src\jpeg12-6b\jdphuff.c" />
+    <ClCompile Include="src\jpeg12-6b\jdpostct.c" />
+    <ClCompile Include="src\jpeg12-6b\jdsample.c" />
+    <ClCompile Include="src\jpeg12-6b\jdtrans.c" />
+    <ClCompile Include="src\jpeg12-6b\jerror.c" />
+    <ClCompile Include="src\jpeg12-6b\jfdctflt.c" />
+    <ClCompile Include="src\jpeg12-6b\jfdctfst.c" />
+    <ClCompile Include="src\jpeg12-6b\jfdctint.c" />
+    <ClCompile Include="src\jpeg12-6b\jidctflt.c" />
+    <ClCompile Include="src\jpeg12-6b\jidctfst.c" />
+    <ClCompile Include="src\jpeg12-6b\jidctint.c" />
+    <ClCompile Include="src\jpeg12-6b\jidctred.c" />
+    <ClCompile Include="src\jpeg12-6b\jmemansi.c" />
+    <ClCompile Include="src\jpeg12-6b\jmemdos.c" />
+    <ClCompile Include="src\jpeg12-6b\jmemmgr.c" />
+    <ClCompile Include="src\jpeg12-6b\jmemname.c" />
+    <ClCompile Include="src\jpeg12-6b\jmemnobs.c" />
+    <ClCompile Include="src\jpeg12-6b\jquant1.c" />
+    <ClCompile Include="src\jpeg12-6b\jquant2.c" />
+    <ClCompile Include="src\jpeg12-6b\jutils.c" />
+    <ClCompile Include="src\jpeg12-6b\rdcolmap.c" />
+    <ClCompile Include="src\jpeg12-6b\rdjpgcom.c" />
+    <ClCompile Include="src\jpeg12-6b\transupp.c" />
+    <ClCompile Include="src\JPEG12.cpp" />
+    <ClCompile Include="src\JPEG8.cpp" />
+    <ClCompile Include="src\JPEG_codec.cpp" />
+    <ClCompile Include="src\Packer_RLE.cpp" />
+    <ClCompile Include="src\PNG_codec.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ahtse_util.h" />
+    <ClInclude Include="src\BitMask2D.h" />
+    <ClInclude Include="src\jpeg12-6b\cderror.h" />
+    <ClInclude Include="src\jpeg12-6b\jchuff.h" />
+    <ClInclude Include="src\jpeg12-6b\jconfig.h" />
+    <ClInclude Include="src\jpeg12-6b\jdct.h" />
+    <ClInclude Include="src\jpeg12-6b\jdhuff.h" />
+    <ClInclude Include="src\jpeg12-6b\jerror.h" />
+    <ClInclude Include="src\jpeg12-6b\jinclude.h" />
+    <ClInclude Include="src\jpeg12-6b\jmemsys.h" />
+    <ClInclude Include="src\jpeg12-6b\jmorecfg.h" />
+    <ClInclude Include="src\jpeg12-6b\jpegint.h" />
+    <ClInclude Include="src\jpeg12-6b\jpeglib.h" />
+    <ClInclude Include="src\jpeg12-6b\jversion.h" />
+    <ClInclude Include="src\JPEG_codec.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{57346A8C-B23D-47E3-A0B2-0DED9E6F1C82}</ProjectGuid>
@@ -146,20 +225,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="libahtse.cpp" />
-    <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
