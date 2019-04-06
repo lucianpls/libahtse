@@ -27,6 +27,7 @@
     <ClCompile Include="src\PNG_codec.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ahtse.h" />
     <ClInclude Include="src\ahtse_util.h" />
     <ClInclude Include="src\BitMask2D.h" />
     <ClInclude Include="src\jpeg12-6b\cderror.h" />

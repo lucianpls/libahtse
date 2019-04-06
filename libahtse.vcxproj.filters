@@ -89,6 +89,9 @@
     <ClInclude Include="src\jpeg12-6b\jversion.h">
       <Filter>Header Files\jpeg12</Filter>
     </ClInclude>
+    <ClInclude Include="src\ahtse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE">
