@@ -4,7 +4,7 @@
  *
  * use setjmp, the only safe way to mix C++ and libjpeg and still get error messages
  *
- * (C)Lucian Plesea 2016-2018
+ * (C)Lucian Plesea 2016-2019
  */
 
 #include "JPEG_codec.h"

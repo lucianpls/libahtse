@@ -1,3 +1,11 @@
+/*
+* JPEG8.cpp
+*
+* libahtse JPEG 8bit codec implementation
+*
+* (C) Lucian Plesea 2018
+*/
+
 #include "JPEG_codec.h"
 
 extern "C" {

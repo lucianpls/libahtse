@@ -4,12 +4,10 @@
 *
 * This code only handles a basic subset of the PNG capabilities
 *
-* (C)Lucian Plesea 2016-2018
+* (C)Lucian Plesea 2016-2019
 */
 
-// #include "mod_convert.h"
-// #include <png.h>
-#include "ahtse_util.h"
+#include "ahtse.h"
 #include <vector>
 #include <png.h>
 

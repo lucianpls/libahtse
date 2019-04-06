@@ -1,5 +1,13 @@
+/*
+* ahtse_util.cpp
+*
+* libahtse implementation
+*
+* (C) Lucian Plesea 2019
+*/
+
 #define NOMINMAX 1
-#include "ahtse_util.h"
+#include "ahtse.h"
 
 // httpd.h includes the ap_ headers in the right order
 // It should not be needed here

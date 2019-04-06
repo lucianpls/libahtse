@@ -1,3 +1,11 @@
+/*
+* JPEG_codec.h
+*
+* Shared code for AHTSE JPEG codec
+*
+* (C) Lucian Plesea 2019
+*/
+
 #if !defined(JPEG_CODEC_H)
 #define JPEG_CODEC_H
 
