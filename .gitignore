@@ -31,6 +31,9 @@
 *.out
 *.app
 
+# Local files
+Makefile.lcl
+
 # VS stuff
 .vs
 *.user

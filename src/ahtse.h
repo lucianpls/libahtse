@@ -90,7 +90,7 @@ NS_AHTSE_START
 
 // Pixel value data types
 // Copied and slightly modified from GDAL
-DLL_PUBLIC typedef enum {
+typedef enum {
     /*! Unknown or unspecified type */ 		GDT_Unknown = 0,
     /*! Eight bit unsigned integer */           GDT_Byte = 1,
     GDT_Char = 1,

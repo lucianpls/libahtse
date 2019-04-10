@@ -1,0 +1,8 @@
+INCLUDES = -I /usr/include/httpd -I /usr/include/apr-1
+DEST = /etc/httpd/modules
+HTTPD_INCLUDES_PATH = /usr/include/httpd
+APXS = apxs
+SUDO = sudo
+LIBTOOL = /usr/lib64/apr-1/build/libtool
+CP = cp
+# DEBUG = -DDEBUG
