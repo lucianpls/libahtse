@@ -215,16 +215,19 @@ struct jpeg_params : codec_params {
 }
 
 // Add the compiled pattern tot the regexp array.  It allocates the array if necessary
-DLL_PUBLIC const char *add_regexp_to_array(apr_pool_t *pool, apr_array_header_t **parr, const char *pattern);
+DLL_PUBLIC const char *add_regexp_to_array(apr_pool_t *pool, 
+    apr_array_header_t **parr, const char *pattern);
 
 //
 // Reads a text file and returns a table where the first token of each line is the key
 // and the rest of the line is the value.  Empty lines and lines that start with # are ignored
 //
-DLL_PUBLIC apr_table_t *readAHTSEConfig(apr_pool_t *pool, const char *fname, const char **err_message);
+DLL_PUBLIC apr_table_t *readAHTSEConfig(apr_pool_t *pool, 
+    const char *fname, const char **err_message);
 
 // Initialize a raster from a kvp table
-DLL_PUBLIC const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, struct TiledRaster &raster);
+DLL_PUBLIC const char *configRaster(apr_pool_t *pool, 
+    apr_table_t *kvp, struct TiledRaster &raster);
 
 // Reads a bounding box, x,y,X,Y order.  Expects up to four numbers in C locale, comma separated
 DLL_PUBLIC const char *getBBox(const char *line, bbox_t &bbox);
@@ -244,7 +247,8 @@ DLL_PUBLIC void tobase32(apr_uint64_t value, char *buffer, int flag = 0);
 //
 DLL_PUBLIC char *readFile(apr_pool_t *pool, storage_manager &empty, const char *line);
 
-// Returns true if one of the regexps compiled in the array match the full request, including args
+// Returns true if one of the regexps compiled in the array match the full request, 
+// including args
 DLL_PUBLIC bool requestMatches(request_rec *r, apr_array_header_t *arr);
 
 // tokenize a string into an array, based on a character. Returns nullptr if unsuccessful
@@ -258,7 +262,8 @@ DLL_PUBLIC int etagMatches(request_rec *r, const char *ETag);
 // Also sets gzip encoding if the content is gzipped and the requester handles it
 // Does not handle conditional response or setting ETags, those should already be set
 // src.buffer should hold at least 4 bytes
-DLL_PUBLIC int sendImage(request_rec *r, const storage_manager &src, const char *mime_type = nullptr);
+DLL_PUBLIC int sendImage(request_rec *r,
+    const storage_manager &src, const char *mime_type = nullptr);
 
 // Called with an empty tile configuration, send the empty tile with the proper ETag
 // Handles conditional requests
@@ -272,10 +277,11 @@ enum img_fmt { IMG_JPEG, IMG_JPEG_ZEN, IMG_PNG };
 // buffer is the location of the first byte on the first line of decoded data
 // line_stride is the size of a line in buffer (larger or equal to decoded JPEG line)
 // Returns NULL if everything looks fine, or an error message
-DLL_PUBLIC const char *jpeg_stride_decode(codec_params &params, const TiledRaster &raster, storage_manager &src,
-    void *buffer);
-DLL_PUBLIC const char *jpeg_encode(jpeg_params &params, const TiledRaster &raster, storage_manager &src,
-    storage_manager &dst);
+DLL_PUBLIC const char *jpeg_stride_decode(codec_params &params, 
+    const TiledRaster &raster, storage_manager &src, void *buffer);
+
+DLL_PUBLIC const char *jpeg_encode(jpeg_params &params, 
+    const TiledRaster &raster, storage_manager &src, storage_manager &dst);
 
 struct png_params : codec_params {
     // As defined by PNG
@@ -295,10 +301,10 @@ struct png_params : codec_params {
 // buffer is the location of the first byte on the first line of decoded data
 // line_stride is the size of a line in buffer (larger or equal to decoded PNG line)
 // Returns NULL if everything looks fine, or an error message
-DLL_PUBLIC const char *png_stride_decode(codec_params &params, const TiledRaster &raster,
-    storage_manager &src, void *buffer);
-DLL_PUBLIC const char *png_encode(png_params &params, const TiledRaster &raster,
-    storage_manager &src, storage_manager &dst);
+DLL_PUBLIC const char *png_stride_decode(codec_params &params,
+    const TiledRaster &raster, storage_manager &src, void *buffer);
+DLL_PUBLIC const char *png_encode(png_params &params,
+    const TiledRaster &raster, storage_manager &src, storage_manager &dst);
 // Based on the raster configuration, populates a png parameter structure
 DLL_PUBLIC int set_def_png_params(const TiledRaster &raster, png_params *params);
 

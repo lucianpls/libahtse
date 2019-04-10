@@ -139,7 +139,10 @@ nmake /f Makefile.vc libjpeg12.lib
 copy /y libjpeg12.lib ..</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy /y $(TargetPath) \Apache24\modules</Command>
+      <Command>copy /y $(TargetPath) \Apache24\modules
+copy /y $(TargetDir)$(TargetName).lib \Apache24\lib
+copy /y $(TargetDir)$(TargetName).pdb \Apache24\lib
+copy /y src\ahtse.h \Apache24\include</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

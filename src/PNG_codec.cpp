@@ -11,7 +11,7 @@
 #include <vector>
 #include <png.h>
 
-NS_AHTSE_USE
+NS_AHTSE_START
 
 // TODO: Add palette PNG support, possibly other fancy options
 
@@ -198,3 +198,5 @@ int set_def_png_params(const TiledRaster &raster, png_params *params) {
     }
     return 0;
 }
+
+NS_AHTSE_END

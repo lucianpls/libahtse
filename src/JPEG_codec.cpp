@@ -9,7 +9,7 @@
 
 #include "JPEG_codec.h"
 
-NS_AHTSE_USE
+NS_AHTSE_START
 
 // Look for the JPEG precision, also check a couple of major structural issues
 static int get_precision(storage_manager &src)
@@ -71,8 +71,10 @@ static int get_precision(storage_manager &src)
     }
     return -1; // Something went wrong
 }
+
 // Dispatcher for 8 or 12 bit jpeg decoder
-const char *jpeg_stride_decode(codec_params &params, const TiledRaster &raster, storage_manager &src, void *buffer)
+const char *jpeg_stride_decode(codec_params &params, 
+    const TiledRaster &raster, storage_manager &src, void *buffer)
 {
     int precision = get_precision(src);
     switch (precision) {
@@ -85,8 +87,8 @@ const char *jpeg_stride_decode(codec_params &params, const TiledRaster &raster, 
     return params.error_message;
 }
 
-const char *jpeg_encode(jpeg_params &params, const TiledRaster &raster, storage_manager &src,
-    storage_manager &dst)
+const char *jpeg_encode(jpeg_params &params, 
+    const TiledRaster &raster, storage_manager &src, storage_manager &dst)
 {
     if (GDTGetSize(raster.datatype) == 1)
         return jpeg8_encode(params, raster, src, dst);
@@ -95,3 +97,5 @@ const char *jpeg_encode(jpeg_params &params, const TiledRaster &raster, storage_
     sprintf(params.error_message, "Usage error, only 8 and 12 bit input can be encoded as JPEG");
     return params.error_message;
 }
+
+NS_AHTSE_END

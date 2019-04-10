@@ -176,7 +176,7 @@ static Byte getLeastUsed(const Byte *src, size_t len) {
 
 // Read from a packed source until the src is exhausted
 // Returns true if all output buffer was filled, 0 otherwise
-int RLEC3Packer::load(storage_manager *src, storage_manager *dst)
+DLL_LOCAL int RLEC3Packer::load(storage_manager *src, storage_manager *dst)
 {
     // Use the first char in the input buffer as marker code
     return dst->size == static_cast<int>(
@@ -191,7 +191,7 @@ int RLEC3Packer::load(storage_manager *src, storage_manager *dst)
 // Makes best case marginally worse because the chosen code adds one byte to the output
 //
 
-int RLEC3Packer::store(storage_manager *src, storage_manager *dst)
+DLL_LOCAL int RLEC3Packer::store(storage_manager *src, storage_manager *dst)
 {
     if (dst->size < 1 + src->size + src->size / 256)
         return 0; // Failed, destination might overflow
