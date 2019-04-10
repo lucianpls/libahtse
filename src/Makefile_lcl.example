@@ -1,6 +1,6 @@
-INCLUDES = -I /usr/include/httpd -I /usr/include/apr-1
-DEST = /etc/httpd/modules
 HTTPD_INCLUDES_PATH = /usr/include/httpd
+INCLUDES = -I $(HTTPD_INCLUDES_PATH) -I /usr/include/apr-1
+DEST = /usr/lib64
 APXS = apxs
 SUDO = sudo
 LIBTOOL = /usr/lib64/apr-1/build/libtool

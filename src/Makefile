@@ -32,6 +32,7 @@ jpeg12-6b/libjpeg12.a	:
 
 install	:	$(TARGET)
 	$(SUDO) $(CP) $^ $(DEST)
+	$(SUDO) $(CP) ahtse.h $(HTTPD_INCLUDES_PATH)
 
 clean	:
 	rm -rf $(TARGET) $(OBJECTS) .libs *.o *.lo *.slo *.la jpeg12-6b/*.o jpeg12-6b/libjpeg12.a
