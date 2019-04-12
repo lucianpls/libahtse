@@ -11,6 +11,7 @@
 
 #include <apr.h>
 #include <httpd.h>
+#include <http_config.h>
 
 #define NS_AHTSE_START namespace AHTSE {
 #define NS_AHTSE_END }
@@ -311,6 +312,13 @@ DLL_PUBLIC int set_def_png_params(const TiledRaster &raster, png_params *params)
 // Skip the leading white spaces and return true for "On" or "1"
 // otherwise it returns false
 DLL_PUBLIC int get_bool(const char *s);
+
+// Fetch the request configuration if it exists, otherwise the per_directory one
+template<typename T> T* get_conf(request_rec * const r, const module * const thism) {
+    T *cfg = (T *)ap_get_module_config(r->request_config, thism);
+    if (cfg) return cfg;
+    return (T *)ap_get_module_config(r->per_dir_config, thism);
+}
 
 NS_AHTSE_END
 
