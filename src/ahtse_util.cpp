@@ -370,12 +370,6 @@ apr_array_header_t *tokenize(apr_pool_t *p, const char *src, char sep) {
     return arr;
 }
 
-int etagMatches(request_rec *r, const char *ETag) {
-    const char *ETagIn = apr_table_get(r->headers_in, "If-None-Match");
-    // There can be more than one code in the input etag, check for the right substring
-    return (nullptr != ETagIn && strstr(ETagIn, ETag) != 0);
-}
-
 // Sends an image, sets the output mime_type.
 // If mime_type is empty or "auto", it can detect the type based on 32bit signature
 int sendImage(request_rec *r, const storage_manager &src, const char *mime_type)
@@ -422,6 +416,13 @@ int sendEmptyTile(request_rec *r, const empty_conf_t &empty) {
 
     apr_table_setn(r->headers_out, "ETag", empty.eTag);
     return sendImage(r, empty.empty);
+}
+
+// These are very small, they should be static inlines, not DLL_PUBLIC
+int etagMatches(request_rec *r, const char *ETag) {
+    const char *ETagIn = apr_table_get(r->headers_in, "If-None-Match");
+    // There can be more than one code in the input etag, check for the right substring
+    return (nullptr != ETagIn && strstr(ETagIn, ETag) != 0);
 }
 
 int get_bool(const char *s) {
