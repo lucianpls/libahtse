@@ -12,6 +12,17 @@
 #include <apr.h>
 #include <httpd.h>
 #include <http_config.h>
+#include <cstdlib>
+#include <cmath>
+
+#define APR_WANT_STRFUNC
+#define APR_WANT_MEMFUNC
+#include <apr_want.h>
+#include <apr_strings.h>
+
+#if APR_SUCCESS != 0
+#error "APR_SUCCESS is not null"
+#endif
 
 #define NS_AHTSE_START namespace AHTSE {
 #define NS_AHTSE_END }
@@ -63,6 +74,7 @@ NS_AHTSE_START
 
 // Conversion to and from network order, endianess depenent
 // Define 4cc signatures for known types, with the correct endianess
+// because they are checked as a uint32_t
 #if APR_IS_BIGENDIAN // Big endian, do nothing
 
 // These values are big endian
@@ -80,6 +92,21 @@ NS_AHTSE_START
 // For formats that need net order
 #define NEED_SWAP
 
+#if defined(_WIN32)
+// Windows is always little endian, supply functions to swap bytes
+ // These are defined in <cstdlib>
+#define htobe16 _byteswap_ushort
+#define be16toh _byteswap_ushort
+#define htobe32 _byteswap_ulong
+#define be32toh _byteswap_ulong
+#define htobe64 _byteswap_uint64
+#define be64toh _byteswap_uint64
+
+#else
+#include <endian.h>
+
+#endif
+
 #define PNG_SIG  0x474e5089
 #define JPEG_SIG 0xe0ffd8ff
 #define LERC_SIG 0x5a746e43
@@ -88,6 +115,9 @@ NS_AHTSE_START
 #define GZIP_SIG 0x00088b1f
 
 #endif
+
+// The maximum size of a tile for MRF, to avoid MRF corruption errors
+#define MAX_TILE_SIZE 4*1024*1024
 
 // Pixel value data types
 // Copied and slightly modified from GDAL
@@ -139,6 +169,15 @@ struct empty_conf_t {
     char eTag[16];
 };
 
+struct rset {
+    // Resolution, units per pixel
+    double rx, ry;
+    // In tiles
+    int w, h;
+    // offset to start of index
+    apr_off_t offset;
+};
+
 struct TiledRaster {
     // Size and pagesize of the raster
     struct sz size, pagesize;
@@ -150,7 +189,7 @@ struct TiledRaster {
     // how many levels from full size, computed
     int n_levels;
     // width and height for each pyramid level
-    struct rset *rsets;
+    rset *rsets;
     // How many levels to skip at the top of the pyramid
     int skip;
     GDALDataType datatype;
@@ -165,11 +204,18 @@ struct TiledRaster {
     empty_conf_t missing;
 };
 
-struct rset {
-    // Resolution, units per pixel
-    double rx, ry;
-    // In tiles
-    int w, h;
+// Generic range
+struct range_t {
+    apr_uint64_t offset;
+    apr_uint64_t size;
+};
+
+// A data source name, either local file or a redirect
+// the range, if not 0,0, holds the valid offset ranges in this source
+struct source_t {
+    char *redirect;
+    char *fname;
+    range_t range;
 };
 
 //
@@ -190,13 +236,6 @@ struct codec_params {
 struct jpeg_params : codec_params {
     int quality;
 };
-
-// Byte swapping, linux style
-#if defined(WIN32) // Windows
-//#define __builtin_bswap16(v) _byteswap_ushort(v)
-//#define __builtin_bswap32(v) _byteswap_ulong(v)
-//#define __builtin_bswap64(v) _byteswap_uint64(v)
-#endif
 
 #define READ_RIGHTS APR_FOPEN_READ | APR_FOPEN_BINARY | APR_FOPEN_LARGEFILE
 // Accept empty tiles up to this size

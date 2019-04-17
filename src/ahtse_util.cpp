@@ -161,6 +161,7 @@ static void init_rsets(apr_pool_t *pool, TiledRaster &raster) {
     ap_assert(raster.n_levels > raster.skip);
 }
 
+// Get a number value, forced c locale
 static double get_value(const char *s, int *has) {
     double value = 0.0;
     *has = 0;
@@ -372,6 +373,8 @@ apr_array_header_t *tokenize(apr_pool_t *p, const char *src, char sep) {
 
 // Sends an image, sets the output mime_type.
 // If mime_type is empty or "auto", it can detect the type based on 32bit signature
+// ETag should be set before
+// Any return other than OK is an error sign
 int sendImage(request_rec *r, const storage_manager &src, const char *mime_type)
 {
     // Simple case first
@@ -393,8 +396,19 @@ int sendImage(request_rec *r, const storage_manager &src, const char *mime_type)
         }
     }
     ap_set_content_type(r, mime_type);
-    if (GZIP_SIG == sig)
+
+    if (GZIP_SIG == sig) {
         apr_table_setn(r->headers_out, "Content-Encoding", "gzip");
+        const char *ae = apr_table_get(r->headers_in, "Accept-Encoding");
+        // If accept encoding is missing, assume it doesn't support gzip
+        if (!ae || !strstr(ae, "gzip")) {
+            ap_filter_rec_t *inflate_filter = ap_get_output_filter_handle("INFLATE");
+            if (inflate_filter)
+                ap_add_output_filter_handle(inflate_filter, NULL, r, r->connection);
+            else // Should flag this as an error, but how?
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+    }
 
     // Finally, the data itself
     ap_set_content_length(r, src.size);
