@@ -138,6 +138,8 @@ typedef enum {
     GDT_TypeCount = 8          /* maximum type # + 1 */
 } GDALDataType;
 
+enum img_fmt { IMG_JPEG, IMG_JPEG_ZEN, IMG_PNG };
+
 // Size in bytes
 DLL_PUBLIC int GDTGetSize(GDALDataType dt, int num = 1);
 
@@ -210,11 +212,11 @@ struct range_t {
     apr_uint64_t size;
 };
 
-// A data source name, either local file or a redirect
-// the range, if not 0,0, holds the valid offset ranges in this source
-struct source_t {
-    char *redirect;
-    char *fname;
+// A virtual file name and a range of valid offsets
+// May be local file or a redirect
+// The range size will be ignored if set to zero
+struct vfile_t {
+    char *name;
     range_t range;
 };
 
@@ -223,7 +225,6 @@ struct source_t {
 // This structure is accepted by the decoders, regardless of type
 // For encoders, see format specific extensions below
 //
-
 struct codec_params {
     // Line size in bytes
     apr_uint32_t line_stride;
@@ -235,6 +236,18 @@ struct codec_params {
 
 struct jpeg_params : codec_params {
     int quality;
+};
+
+struct png_params : codec_params {
+    // As defined by PNG
+    int color_type, bit_depth;
+    // 0 to 9
+    int compression_level;
+
+    // If true, NDV is the transparent color
+    int has_transparency;
+    // TODO: Have a way to pass the transparent color when has_transparency is on
+
 };
 
 #define READ_RIGHTS APR_FOPEN_READ | APR_FOPEN_BINARY | APR_FOPEN_LARGEFILE
@@ -259,8 +272,9 @@ DLL_PUBLIC const char *add_regexp_to_array(apr_pool_t *pool,
     apr_array_header_t **parr, const char *pattern);
 
 //
-// Reads a text file and returns a table where the first token of each line is the key
-// and the rest of the line is the value.  Empty lines and lines that start with # are ignored
+// Reads a text file and returns a table where the directive is the key
+// and the rest of the line is the value.
+// Empty lines and lines that start with # are not returned
 //
 DLL_PUBLIC apr_table_t *readAHTSEConfig(apr_pool_t *pool, 
     const char *fname, const char **err_message);
@@ -309,8 +323,6 @@ DLL_PUBLIC int sendImage(request_rec *r,
 // Handles conditional requests
 DLL_PUBLIC int sendEmptyTile(request_rec *r, const empty_conf_t &empty);
 
-enum img_fmt { IMG_JPEG, IMG_JPEG_ZEN, IMG_PNG };
-
 // In JPEG_codec.cpp
 // raster defines the expected tile
 // src contains the input JPEG
@@ -322,18 +334,6 @@ DLL_PUBLIC const char *jpeg_stride_decode(codec_params &params,
 
 DLL_PUBLIC const char *jpeg_encode(jpeg_params &params, 
     const TiledRaster &raster, storage_manager &src, storage_manager &dst);
-
-struct png_params : codec_params {
-    // As defined by PNG
-    int color_type, bit_depth;
-    // 0 to 9
-    int compression_level;
-
-    // If true, NDV is the transparent color
-    int has_transparency;
-    // TODO: Have a way to pass the transparent color when has_transparency is on
-
-};
 
 // In PNG_codec.cpp
 // raster defines the expected tile
