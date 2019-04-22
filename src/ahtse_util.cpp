@@ -23,6 +23,8 @@
 #include <cmath>
 // setlocale
 #include <clocale>
+#include <cstring>
+
 #include <algorithm>
 #include <unordered_map>
 
@@ -138,6 +140,7 @@ static void init_rsets(apr_pool_t *pool, TiledRaster &raster) {
     level.ry = (raster.bbox.ymax - raster.bbox.ymin) / raster.pagesize.y;
     level.w = static_cast<int>(1 + (raster.size.x - 1) / raster.pagesize.x);
     level.h = static_cast<int>(1 + (raster.size.y - 1) / raster.pagesize.y);
+    level.tiles = 0;
 
     // How many levels are there?
     raster.n_levels = 2 + ilogb(std::max(level.w, level.h) - 1);
@@ -150,6 +153,7 @@ static void init_rsets(apr_pool_t *pool, TiledRaster &raster) {
     rset *r = &raster.rsets[raster.n_levels - 1];
     for (int i = 0; i < raster.n_levels; i++) {
         *r-- = level;
+        level.tiles += raster.size.z * level.w * level.h;
         level.w = 1 + (level.w - 1) / 2;
         level.h = 1 + (level.h - 1) / 2;
         level.rx *= 2;
@@ -297,9 +301,9 @@ void tobase32(apr_uint64_t value, char *buffer, int flag) {
     buffer[13] = '\0';
 }
 
+// Read the empty tile in the storage manager
 char *readFile(apr_pool_t *pool, storage_manager &empty, const char *line)
 {
-    // If we're provided a file name or a size, pre-read the empty tile in the 
     apr_file_t *efile;
     apr_off_t offset = 0;
     apr_status_t stat;
@@ -345,9 +349,11 @@ bool requestMatches(request_rec *r, apr_array_header_t *arr) {
         return false;
 
     // Match the request, including the arguments if present
-    const char *url_to_match = r->args ? apr_pstrcat(r->pool, r->uri, "?", r->args, NULL) : r->uri;
+    const char *url_to_match = r->args ? 
+        apr_pstrcat(r->pool, r->uri, "?", r->args, NULL) : r->uri;
     for (int i = 0; i < arr->nelts; i++)
-        if (ap_rxplus_exec(r->pool, APR_ARRAY_IDX(arr, i, ap_rxplus_t *), url_to_match, nullptr))
+        if (ap_rxplus_exec(r->pool, APR_ARRAY_IDX(arr, i, ap_rxplus_t *), 
+                            url_to_match, nullptr))
             return true;
 
     return false;
@@ -403,10 +409,11 @@ int sendImage(request_rec *r, const storage_manager &src, const char *mime_type)
         // If accept encoding is missing, assume it doesn't support gzip
         if (!ae || !strstr(ae, "gzip")) {
             ap_filter_rec_t *inflate_filter = ap_get_output_filter_handle("INFLATE");
-            if (inflate_filter)
-                ap_add_output_filter_handle(inflate_filter, NULL, r, r->connection);
-            else // Should flag this as an error, but how?
+            // Should flag this as an error, but how?
+            if (!inflate_filter)
                 return HTTP_INTERNAL_SERVER_ERROR;
+
+            ap_add_output_filter_handle(inflate_filter, NULL, r, r->connection);
         }
     }
 
@@ -435,14 +442,25 @@ int sendEmptyTile(request_rec *r, const empty_conf_t &empty) {
 // These are very small, they should be static inlines, not DLL_PUBLIC
 int etagMatches(request_rec *r, const char *ETag) {
     const char *ETagIn = apr_table_get(r->headers_in, "If-None-Match");
-    // There can be more than one code in the input etag, check for the right substring
-    return (nullptr != ETagIn && strstr(ETagIn, ETag) != 0);
+
+    // There can be more than one code in the input etag, comma separated
+    // Single etag, most common, avoids allocations
+    if (!strchr(ETag, ','))
+        return (nullptr != ETagIn && strstr(ETagIn, ETag) != 0);
+
+    apr_array_header_t *tags = tokenize(r->pool, ETag, ',');
+    char *tag = nullptr;
+    while (tag = *reinterpret_cast<char **>(apr_array_pop(tags)))
+        if (!strstr(ETagIn, tag))
+            return true;
+
+    return false;
 }
 
-int get_bool(const char *s) {
+int getBool(const char *s) {
     while (*s != 0 && (*s == ' ' || *s == '\t'))
         s++;
-    return (!ap_cstr_casecmp(s, "On") || !ap_cstr_casecmp(s, "1"));
+    return (!ap_cstr_casecmp(s, "On") || !ap_cstr_casecmp(s, "True") || *s == '1');
 }
 
 NS_AHTSE_END

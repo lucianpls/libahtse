@@ -180,8 +180,8 @@ struct rset {
     double rx, ry;
     // In tiles
     int w, h;
-    // offset to start of index
-    apr_off_t offset;
+    // level starting offset, in tiles
+    apr_uint64_t tiles;
 };
 
 struct TiledRaster {
