@@ -442,19 +442,7 @@ int sendEmptyTile(request_rec *r, const empty_conf_t &empty) {
 // These are very small, they should be static inlines, not DLL_PUBLIC
 int etagMatches(request_rec *r, const char *ETag) {
     const char *ETagIn = apr_table_get(r->headers_in, "If-None-Match");
-
-    // There can be more than one code in the input etag, comma separated
-    // Single etag, most common, avoids allocations
-    if (!strchr(ETag, ','))
-        return (nullptr != ETagIn && strstr(ETagIn, ETag) != 0);
-
-    apr_array_header_t *tags = tokenize(r->pool, ETag, ',');
-    char *tag = nullptr;
-    while (tag = *reinterpret_cast<char **>(apr_array_pop(tags)))
-        if (!strstr(ETagIn, tag))
-            return true;
-
-    return false;
+    return (nullptr != ETagIn && 0 != strstr(ETagIn, ETag));
 }
 
 int getBool(const char *s) {
