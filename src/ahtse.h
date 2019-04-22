@@ -160,6 +160,10 @@ struct bbox_t {
 };
 
 struct storage_manager {
+    storage_manager(void) : buffer(nullptr), size(0) {}
+    storage_manager(void *ptr, size_t sz) :
+        buffer(reinterpret_cast<char *>(ptr)),
+        size(static_cast<int>(sz)) {}
     char *buffer;
     int size;
 };

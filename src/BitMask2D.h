@@ -156,7 +156,7 @@ public:
 
     int store(storage_manager *dst) {
         int result;
-        storage_manager src = { reinterpret_cast<char *>(&_bits[0]), static_cast<int>(size()) };
+        storage_manager src(_bits.data(), size());
         // Store the mask units in little endian format
         // Swab only does something on big endian architectures
         swab();
@@ -171,7 +171,7 @@ public:
 
     int load(storage_manager *src) {
         int result;
-        storage_manager dst = { reinterpret_cast<char *>(&_bits[0]), static_cast<int>(size()) };
+        storage_manager dst(_bits.data(), size());
         if (_packer)
             result = _packer->load(src, &dst);
         else
