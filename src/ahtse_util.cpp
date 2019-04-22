@@ -343,7 +343,7 @@ char *readFile(apr_pool_t *pool, storage_manager &mgr, const char *line)
     if (APR_SUCCESS != stat)
         return apr_psprintf(pool, "Can't seek empty tile %s: %pm", efname, &stat);
     stat = apr_file_read(efile, mgr.buffer, &size);
-    if (APR_SUCCESS != stat || size != mgr.size)
+    if (APR_SUCCESS != stat || size != static_cast<apr_size_t>(mgr.size))
         return apr_psprintf(pool, "Can't read from %s: %pm", efname, &stat);
     apr_file_close(efile);
     return NULL;
