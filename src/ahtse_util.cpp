@@ -301,15 +301,20 @@ void tobase32(apr_uint64_t value, char *buffer, int flag) {
     buffer[13] = '\0';
 }
 
-// Read the empty tile in the storage manager
-char *readFile(apr_pool_t *pool, storage_manager &empty, const char *line)
+// Read a file, or a portion of a file in the storage manager
+// the line is of the format
+//
+// <size> <offset> fname
+// size defaults to full file size and offset defaults to 0
+//
+char *readFile(apr_pool_t *pool, storage_manager &mgr, const char *line)
 {
     apr_file_t *efile;
     apr_off_t offset = 0;
     apr_status_t stat;
     char *last;
 
-    empty.size = static_cast<int>(apr_strtoi64(line, &last, 0));
+    mgr.size = static_cast<int>(apr_strtoi64(line, &last, 0));
     // Might be an offset, or offset then file name
     if (last != line)
         apr_strtoff(&(offset), last, &last, 0);
@@ -318,27 +323,27 @@ char *readFile(apr_pool_t *pool, storage_manager &empty, const char *line)
     const char *efname = last;
 
     // Use the temp pool for the file open, it will close it for us
-    if (0 == empty.size) { // Don't know the size, get it from the file
+    if (0 == mgr.size) { // Don't know the size, get it from the file
         apr_finfo_t finfo;
         stat = apr_stat(&finfo, efname, APR_FINFO_CSIZE, pool);
         if (APR_SUCCESS != stat)
             return apr_psprintf(pool, "Can't stat %s %pm", efname, &stat);
-        empty.size = static_cast<int>(finfo.csize);
+        mgr.size = static_cast<int>(finfo.size);
     }
 
-    if (empty.size > MAX_READ_SIZE)
+    apr_size_t size = mgr.size;
+    if (size > MAX_READ_SIZE)
         return apr_psprintf(pool, "Empty tile too large, max is %d", MAX_READ_SIZE);
 
     stat = apr_file_open(&efile, efname, READ_RIGHTS, 0, pool);
     if (APR_SUCCESS != stat)
         return apr_psprintf(pool, "Can't open empty file %s, %pm", efname, &stat);
-    empty.buffer = static_cast<char *>(apr_palloc(pool, (apr_size_t)empty.size));
+    mgr.buffer = static_cast<char *>(apr_palloc(pool, size));
     stat = apr_file_seek(efile, APR_SET, &offset);
     if (APR_SUCCESS != stat)
         return apr_psprintf(pool, "Can't seek empty tile %s: %pm", efname, &stat);
-    apr_size_t size = static_cast<apr_size_t>(empty.size);
-    stat = apr_file_read(efile, empty.buffer, &size);
-    if (APR_SUCCESS != stat)
+    stat = apr_file_read(efile, mgr.buffer, &size);
+    if (APR_SUCCESS != stat || size != mgr.size)
         return apr_psprintf(pool, "Can't read from %s: %pm", efname, &stat);
     apr_file_close(efile);
     return NULL;
@@ -432,11 +437,11 @@ int sendEmptyTile(request_rec *r, const empty_conf_t &empty) {
         return HTTP_NOT_MODIFIED;
     }
 
-    if (nullptr != empty.empty.buffer)
+    if (nullptr == empty.data.buffer)
         return DECLINED;
 
     apr_table_setn(r->headers_out, "ETag", empty.eTag);
-    return sendImage(r, empty.empty);
+    return sendImage(r, empty.data);
 }
 
 // These are very small, they should be static inlines, not DLL_PUBLIC

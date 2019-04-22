@@ -170,7 +170,7 @@ struct storage_manager {
 
 struct empty_conf_t {
     // Empty tile in RAM, if defined
-    storage_manager empty;
+    storage_manager data;
     // Buffer for the empty tile etag
     char eTag[16];
 };
