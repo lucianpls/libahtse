@@ -444,6 +444,24 @@ int sendEmptyTile(request_rec *r, const empty_conf_t &empty) {
     return sendImage(r, empty.data);
 }
 
+apr_status_t getMLRC(request_rec *r, sz &tile, int need_m) {
+    auto *tokens = tokenize(r->pool, r->uri);
+    if (tokens->nelts < 3 || (need_m && tokens->nelts < 4))
+        return APR_BADARG;
+
+    tile.x = apr_atoi64(*(char **)apr_array_pop(tokens));
+    if (errno) return errno;
+    tile.y = apr_atoi64(*(char **)apr_array_pop(tokens));
+    if (errno) return errno;
+    tile.l = apr_atoi64(*(char **)apr_array_pop(tokens));
+    if (errno) return errno;
+    if (need_m) {
+        // Ignore the errno, M is always optional
+        tile.z = apr_atoi64(*(char **)apr_array_pop(tokens));
+    }
+    return APR_SUCCESS;
+}
+
 // These are very small, they should be static inlines, not DLL_PUBLIC
 int etagMatches(request_rec *r, const char *ETag) {
     const char *ETagIn = apr_table_get(r->headers_in, "If-None-Match");

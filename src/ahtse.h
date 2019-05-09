@@ -312,6 +312,9 @@ DLL_PUBLIC bool requestMatches(request_rec *r, apr_array_header_t *arr);
 // tokenize a string into an array, based on a character. Returns nullptr if unsuccessful
 DLL_PUBLIC apr_array_header_t *tokenize(apr_pool_t *p, const char *src, char sep = '/');
 
+// Get 3 or 4 numerical parameters from the end of the request uri
+DLL_PUBLIC apr_status_t getMLRC(request_rec *r, sz &tile, int need_m = 0);
+
 // returns true if the If-None-Match request etag matches
 DLL_PUBLIC int etagMatches(request_rec *r, const char *ETag);
 
