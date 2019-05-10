@@ -102,6 +102,9 @@ NS_AHTSE_START
 #define htobe64 _byteswap_uint64
 #define be64toh _byteswap_uint64
 
+#define le64toh(X) (X)
+#define htole64(X) (X)
+
 #else
 #include <endian.h>
 
@@ -359,11 +362,24 @@ DLL_PUBLIC int set_def_png_params(const TiledRaster &raster, png_params *params)
 // otherwise it returns false
 DLL_PUBLIC int getBool(const char *s);
 
+/*  TEMPLATES
+ */
+
 // Fetch the request configuration if it exists, otherwise the per_directory one
 template<typename T> T* get_conf(request_rec * const r, const module * const thism) {
     T *cfg = (T *)ap_get_module_config(r->request_config, thism);
     if (cfg) return cfg;
     return (T *)ap_get_module_config(r->per_dir_config, thism);
+}
+
+// command function to set the source and postfix fields in an ahtse module configuration
+template<typename T> const char *set_source(cmd_parms *cmd, T *cfg,
+    const char *src, const char *postfix)
+{
+    cfg->source = apr_pstrdup(cmd->pool, src);
+    if (postfix && postfix[0])
+        cfg->postfix = apr_pstrdup(cmd->pool, postfix);
+    return NULL;
 }
 
 NS_AHTSE_END
