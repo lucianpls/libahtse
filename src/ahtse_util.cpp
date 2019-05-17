@@ -459,6 +459,9 @@ apr_status_t getMLRC(request_rec *r, sz &tile, int need_m) {
         // Ignore the errno, M is always optional
         tile.z = apr_atoi64(*(char **)apr_array_pop(tokens));
     }
+    else {
+        tile.z = 0;
+    }
     return APR_SUCCESS;
 }
 
