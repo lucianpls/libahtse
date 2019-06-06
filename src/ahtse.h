@@ -362,6 +362,20 @@ DLL_PUBLIC int set_def_png_params(const TiledRaster &raster, png_params *params)
 // otherwise it returns false
 DLL_PUBLIC int getBool(const char *s);
 
+// Parse the arguments into a key-pair hash
+// Retuns a hash or NULL, if no arguments are present
+// Use apr_hash_get(phash, key, APR_HASH_KEY_STRING) to get the value(s), if key is present
+// returned key and pair values are url-unescaped
+// If raw_args is NULL, r->args is used.  If r->args is also NULL, it returns NULL
+// A key may have a null value
+// If multi is true, a key may appear multiple times and the returned hash contains arrays of values
+// If multi is false, the returned hash contains strings, the first appearance of each key
+// It returns an empty hash if the arguments are an empty string
+DLL_PUBLIC apr_hash_t *argparse(request_rec *r,
+    const char *raw_args = NULL,
+    const char *sep = "&",
+    bool multi = false);
+
 /*  TEMPLATES
  */
 

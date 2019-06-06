@@ -477,4 +477,51 @@ int getBool(const char *s) {
     return (!ap_cstr_casecmp(s, "On") || !ap_cstr_casecmp(s, "True") || *s == '1');
 }
 
+// adapted from "the Apache Modules book"
+// If multi is set, a key instance may be repeated and the returned hash contains arrays of values
+// Otherwise only the first appearance of a key is kept and the returned has contains strings
+apr_hash_t *argparse(request_rec *r, const char *raw_args, const char *sep, bool multi)
+{
+    if (!raw_args)
+        raw_args = r->args;
+    if (!raw_args)
+        return NULL;
+
+    // Use a copy of the arguments
+    char *args = apr_pstrdup(r->pool, raw_args);
+    apr_hash_t *form = apr_hash_make(r->pool);
+    char *last = NULL, *pair = NULL;
+    while (pair = apr_strtok(args, sep, &last)) {
+        args = NULL;
+        for (char *c = pair; *c; c++)
+            if (*c == '+') *c = ' ';
+        // split the argument into key and value, unescape them
+        char *v = strchr(pair, '=');
+        if (v) {
+            *v++ = 0;
+            ap_unescape_url(v);
+        }
+        ap_unescape_url(pair);
+
+        // Set this key-value
+        if (!multi) {
+            if (!apr_hash_get(form, pair, APR_HASH_KEY_STRING))
+                apr_hash_set(form, pair, APR_HASH_KEY_STRING, v);
+            continue;
+        }
+
+        // Store key/value pair in the form hash.  
+        // Since a key may be repeated, store the values in an array
+        auto *values = reinterpret_cast<apr_array_header_t *>(
+            apr_hash_get(form, pair, APR_HASH_KEY_STRING));
+        if (!values) { // Create the values array
+            values = apr_array_make(r->pool, 1, sizeof(void *));
+            apr_hash_set(form, pair, APR_HASH_KEY_STRING, values);
+        }
+        APR_ARRAY_PUSH(values, char *) = v;
+    }
+
+    return form;
+ }
+
 NS_AHTSE_END
