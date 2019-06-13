@@ -154,6 +154,9 @@ struct sz {
     apr_int64_t x, y, z, c, l;
 };
 
+// Works as location also
+#define sloc_t sz
+
 // Populates size and returns null if it works, error message otherwise
 // "x y", "x y z" or "x y z c"
 DLL_PUBLIC const char *get_xyzc_size(sz *size, const char *value);
@@ -194,6 +197,7 @@ struct TiledRaster {
     // Generic data values
     double ndv, min, max;
     int has_ndv, has_min, has_max;
+    int maxtilesize;
 
     // how many levels from full size, computed
     int n_levels;

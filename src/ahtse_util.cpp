@@ -197,6 +197,14 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
         && nullptr != (err_message = get_xyzc_size(&raster.pagesize, line)))
             return apr_pstrcat(pool, "PageSize ", err_message, NULL);
 
+    raster.maxtilesize = MAX_TILE_SIZE;
+    if (nullptr != (line = apr_table_get(kvp, "MaxTileSize"))) {
+        raster.maxtilesize = int(apr_atoi64(line));
+        // Complain if proposed size is too small or too large
+        if (raster.maxtilesize < 131072 || raster.maxtilesize >(1024 * 1024 * 512))
+            return "MaxTileSize should be between 128K and 512M";
+    }
+
     // This sets Byte as the default
     raster.datatype = getDT(apr_table_get(kvp, "DataType"));
 
