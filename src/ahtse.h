@@ -19,6 +19,7 @@
 #define APR_WANT_MEMFUNC
 #include <apr_want.h>
 #include <apr_strings.h>
+#include <apr_hash.h>
 
 #if APR_SUCCESS != 0
 #error "APR_SUCCESS is not null"
