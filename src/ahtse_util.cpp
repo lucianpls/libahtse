@@ -499,7 +499,7 @@ apr_hash_t *argparse(request_rec *r, const char *raw_args, const char *sep, bool
     char *args = apr_pstrdup(r->pool, raw_args);
     apr_hash_t *form = apr_hash_make(r->pool);
     char *last = NULL, *pair = NULL;
-    while (pair = apr_strtok(args, sep, &last)) {
+    while ((pair = apr_strtok(args, sep, &last))) {
         args = NULL;
         for (char *c = pair; *c; c++)
             if (*c == '+') *c = ' ';
