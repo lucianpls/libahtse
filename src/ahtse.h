@@ -151,9 +151,7 @@ DLL_PUBLIC int GDTGetSize(GDALDataType dt, int num = 1);
 DLL_PUBLIC GDALDataType getDT(const char *name);
 
 // Separate channels and level, just in case
-struct sz {
-    apr_int64_t x, y, z, c, l;
-};
+struct sz { apr_int64_t x, y, z, c, l; };
 
 // Works as location also
 #define sloc_t sz
@@ -162,9 +160,8 @@ struct sz {
 // "x y", "x y z" or "x y z c"
 DLL_PUBLIC const char *get_xyzc_size(sz *size, const char *value);
 
-struct bbox_t {
-    double xmin, ymin, xmax, ymax;
-};
+// Bounding box
+struct bbox_t { double xmin, ymin, xmax, ymax; };
 
 struct storage_manager {
     storage_manager(void) : buffer(nullptr), size(0) {}
@@ -175,6 +172,7 @@ struct storage_manager {
     int size;
 };
 
+// Empty tile runtime object
 struct empty_conf_t {
     // Empty tile in RAM, if defined
     storage_manager data;
@@ -182,6 +180,7 @@ struct empty_conf_t {
     char eTag[16];
 };
 
+// Resolution set (level)
 struct rset {
     // Resolution, units per pixel
     double rx, ry;
@@ -191,6 +190,7 @@ struct rset {
     apr_uint64_t tiles;
 };
 
+// Tile raster properties
 struct TiledRaster {
     // Size and pagesize of the raster
     struct sz size, pagesize;
@@ -259,7 +259,6 @@ struct png_params : codec_params {
     // If true, NDV is the transparent color
     int has_transparency;
     // TODO: Have a way to pass the transparent color when has_transparency is on
-
 };
 
 #define READ_RIGHTS APR_FOPEN_READ | APR_FOPEN_BINARY | APR_FOPEN_LARGEFILE
@@ -274,6 +273,7 @@ struct png_params : codec_params {
 #define RETURN_ERR_IF(X) if (X) { return HTTP_BAD_REQUEST;}
 
 // Server error with log message
+// It is a macro because the APLOG_MARK depends on the module used
 #define SERVER_ERR_IF(X, r, msg, ...) if (X) {\
     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, msg, ##__VA_ARGS__);\
     return HTTP_INTERNAL_SERVER_ERROR;\
