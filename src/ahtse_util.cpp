@@ -3,7 +3,13 @@
 *
 * libahtse implementation
 *
+*
+* Can't use the logging functions from a shared library, the macros don't resolve correctly
+* The alternative used is to return strings containing the error message, leaving the 
+* called decide if logging is necessary
+*
 * (C) Lucian Plesea 2019
+*
 */
 
 #define NOMINMAX 1
@@ -463,13 +469,9 @@ apr_status_t getMLRC(request_rec *r, sz &tile, int need_m) {
     if (errno) return errno;
     tile.l = apr_atoi64(*(char **)apr_array_pop(tokens));
     if (errno) return errno;
-    if (need_m) {
-        // Ignore the errno, M is always optional
-        tile.z = apr_atoi64(*(char **)apr_array_pop(tokens));
-    }
-    else {
-        tile.z = 0;
-    }
+    tile.z = need_m ? apr_atoi64(*(char **)apr_array_pop(tokens)) : 0;
+    // Z defaults to 0
+    if (errno) tile.z = 0;
     return APR_SUCCESS;
 }
 
@@ -485,9 +487,11 @@ int getBool(const char *s) {
     return (!ap_cstr_casecmp(s, "On") || !ap_cstr_casecmp(s, "True") || *s == '1');
 }
 
+// Parser for kev=value pair string
 // adapted from "the Apache Modules book"
-// If multi is set, a key instance may be repeated and the returned hash contains arrays of values
-// Otherwise only the first appearance of a key is kept and the returned has contains strings
+// If multi is set, a key instance may be repeated and the returned hash 
+// contains arrays of values. Otherwise only the first appearance of a key 
+// is kept and the returned hash contains strings
 apr_hash_t *argparse(request_rec *r, const char *raw_args, const char *sep, bool multi)
 {
     if (!raw_args)

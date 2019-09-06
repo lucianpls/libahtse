@@ -126,20 +126,20 @@ NS_AHTSE_START
 // Pixel value data types
 // Copied and slightly modified from GDAL
 typedef enum {
-    /*! Unknown or unspecified type */ 		GDT_Unknown = 0,
-    /*! Eight bit unsigned integer */           GDT_Byte = 1,
+    GDT_Unknown = 0,    // Unknown or unspecified type
+    GDT_Byte = 1,       // Eight bit unsigned integer
     GDT_Char = 1,
-    /*! Sixteen bit unsigned integer */         GDT_UInt16 = 2,
-    /*! Sixteen bit signed integer */           GDT_Int16 = 3,
+    GDT_UInt16 = 2,     // Sixteen bit unsigned integer
+    GDT_Int16 = 3,      // Sixteen bit signed integer
     GDT_Short = 3,
-    /*! Thirty two bit unsigned integer */      GDT_UInt32 = 4,
-    /*! Thirty two bit signed integer */        GDT_Int32 = 5,
+    GDT_UInt32 = 4,     // Thirty two bit unsigned integer
+    GDT_Int32 = 5,      // Thirty two bit signed integer
     GDT_Int = 5,
-    /*! Thirty two bit floating point */        GDT_Float32 = 6,
+    GDT_Float32 = 6,    // Thirty two bit floating point
     GDT_Float = 6,
-    /*! Sixty four bit floating point */        GDT_Float64 = 7,
-    GDT_Double = 7,
-    GDT_TypeCount = 8          /* maximum type # + 1 */
+    GDT_Float64 = 7,    // Sixty four bit floating point
+    GDT_Double = 7
+//    GDT_TypeCount = 8   // Not a type
 } GDALDataType;
 
 enum img_fmt { IMG_JPEG, IMG_JPEG_ZEN, IMG_PNG };

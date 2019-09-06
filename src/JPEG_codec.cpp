@@ -83,7 +83,8 @@ const char *jpeg_stride_decode(codec_params &params,
     case 12:
         return jpeg12_stride_decode(params, raster, src, buffer);
     }
-    sprintf(params.error_message, "Input error, not recognized as JPEG");
+    sprintf(params.error_message, 
+        "Input error, not recognized as JPEG");
     return params.error_message;
 }
 
@@ -94,7 +95,8 @@ const char *jpeg_encode(jpeg_params &params,
         return jpeg8_encode(params, raster, src, dst);
     if (GDTGetSize(raster.datatype) == 1)
         return jpeg12_encode(params, raster, src, dst);
-    sprintf(params.error_message, "Usage error, only 8 and 12 bit input can be encoded as JPEG");
+    sprintf(params.error_message, 
+        "Usage error, only 8 and 12 bit input can be encoded as JPEG");
     return params.error_message;
 }
 
