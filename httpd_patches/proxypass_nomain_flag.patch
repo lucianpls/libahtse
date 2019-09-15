@@ -1,0 +1,32 @@
+--- a/modules/proxy/mod_proxy.c
++++ b/modules/proxy/mod_proxy.c
+@@ -763,6 +763,9 @@ PROXY_DECLARE(int) ap_proxy_trans_match(request_rec *r, struct proxy_alias *ent,
+                 "Unescaped URL path matched ProxyPass; ignoring unsafe nocanon");
+     }
+ 
++    if (found && r->main == 0 && (ent->flags & PROXYPASS_NOMAIN))
++        found = NULL;
++
+     if (found) {
+         r->filename = found;
+         r->handler = "proxy-server";
+@@ -1771,6 +1774,9 @@ static const char *
+         else if (!strcasecmp(word,"noquery")) {
+             flags |= PROXYPASS_NOQUERY;
+         }
++        else if (!strcasecmp(word, "nomain")) {
++            flags |= PROXYPASS_NOMAIN;
++        }
+         else {
+             char *val = strchr(word, '=');
+             if (!val) {
+--- a/modules/proxy/mod_proxy.h
++++ b/modules/proxy/mod_proxy.h
+@@ -123,6 +123,7 @@ struct proxy_remote {
+ #define PROXYPASS_NOCANON 0x01
+ #define PROXYPASS_INTERPOLATE 0x02
+ #define PROXYPASS_NOQUERY 0x04
++#define PROXYPASS_NOMAIN 0x08
+ struct proxy_alias {
+     const char  *real;
+     const char  *fake;
