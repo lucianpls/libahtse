@@ -9,7 +9,7 @@ jpeg-turbo for 8 bit and jpeg12-6b for 12 bit
 
 ## httpd_patches content
 
-This folder contains a few useful patches for the Apache httpd 2.x source. [Patches README](httpd_patches/README.md)
+This folder contains a few useful patches for the Apache httpd 2.x source. [README](httpd_patches/README.md)
 
 ## AHTSE development rules
 
