@@ -7,6 +7,10 @@ The content of jpeg12-6b folder is used to generate a static JPEG library with 1
 The 8 bit libjpeg and libpng used are the system ones. This makes it possible to use 
 jpeg-turbo for 8 bit and jpeg12-6b for 12 bit
 
+## httpd_patches content
+
+This folder contains a few useful patches for the Apache httpd 2.x source. [Patches README](httpd_patches/README.md)
+
 ## AHTSE development rules
 
 The _Source is an apache directive, used by any non-source module.  It takes one or two 
