@@ -540,7 +540,7 @@ apr_hash_t *argparse(request_rec *r, const char *raw_args, const char *sep, bool
 
 
 // Issues a subrequest and captures the response and the ETag
-static int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
+int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     char **psETag)
 
 {
@@ -570,21 +570,15 @@ static int get_response(request_rec *r, const char *lcl_path, storage_manager &d
     return code;  // returns APR_SUCCESS or http code
 }
 
-// Get a remote tile, using the MRLC protocol
-// if psETag is provided, the ETAG from the response is saved
-static int get_remote_tile(request_rec *r, const char *remote, const sloc_t &tile,
-    storage_manager &dst, char **psETag, const char *suffix)
-{
+// Builds an MRLC uri, suffix optional
+char *pMRLC(apr_pool_t *pool, const char *prefix, const sloc_t &tile, const char *suffix) {
 #define FMT APR_INT64_T_FMT
-    char *stile = apr_psprintf(r->pool, "/%" FMT "/%" FMT "/%" FMT "/%" FMT,
-        tile.z, tile.l, tile.y, tile.x
-    );
+    char *stile = apr_psprintf(pool, "/%" FMT "/%" FMT "/%" FMT "/%" FMT,
+        tile.z, tile.l, tile.y, tile.x);
 #undef FMT
-    if (tile.z == 0)
-        stile += 2; // Skip the leading 0 parameter
-
-    char *sub_uri = apr_pstrcat(r->pool, remote, "/tile", stile, suffix, NULL);
-    return get_response(r, sub_uri, dst, psETag);
+    if (0 == tile.z)
+        stile += 2;
+    return apr_pstrcat(pool, prefix, "/tile", stile, suffix, NULL);
 }
 
 NS_AHTSE_END

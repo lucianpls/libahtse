@@ -386,13 +386,22 @@ DLL_PUBLIC apr_hash_t *argparse(request_rec *r,
 // Returns APR_SUCESS or source http response
 // Returns HTTP_INTERNAL_SERVER_ERROR if mod_receive is not available
 //
-static int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
+DLL_PUBLIC int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     char **psETag = NULL);
+
+// Builds an MRLC uri, suffix optional
+DLL_PUBLIC char *pMRLC(apr_pool_t *pool, const char *prefix, const sloc_t &tile,
+    const char *suffix = NULL);
 
 // Like get_response, but using the tile location to generate the local path
 // using the M/L/R/C notation
-static int get_remote_tile(request_rec *r, const char *remote, const sloc_t &tile,
-    storage_manager &dst, char **psETag = NULL, const char *suffix = NULL);
+
+// Builds and issues an MRLC uri, using pMRLC and get_response
+static inline int get_remote_tile(request_rec *r, const char *remote, const sloc_t &tile,
+    storage_manager &dst, char **psETag, const char *suffix)
+{
+    return get_response(r, pMRLC(r->pool, remote, tile, suffix), dst, psETag);
+}
 
 /*  TEMPLATES
  */
