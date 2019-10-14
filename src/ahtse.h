@@ -413,13 +413,13 @@ template<typename T> T* get_conf(request_rec * const r, const module * const thi
     return (T *)ap_get_module_config(r->per_dir_config, thism);
 }
 
-// command function to set the source and postfix fields in an ahtse module configuration
+// command function to set the source and suffix fields in an ahtse module configuration
 template<typename T> const char *set_source(cmd_parms *cmd, T *cfg,
-    const char *src, const char *postfix)
+    const char *src, const char *suffix)
 {
     cfg->source = apr_pstrdup(cmd->pool, src);
-    if (postfix && postfix[0])
-        cfg->postfix = apr_pstrdup(cmd->pool, postfix);
+    if (suffix && suffix[0])
+        cfg->suffix = apr_pstrdup(cmd->pool, suffix);
     return NULL;
 }
 
