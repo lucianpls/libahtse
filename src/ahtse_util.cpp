@@ -14,12 +14,14 @@
 
 #define NOMINMAX 1
 #include "ahtse.h"
+#include "receive_context.h"
 
 // httpd.h includes the ap_ headers in the right order
 // It should not be needed here
 #include <httpd.h>
 #include <http_config.h>
 #include <http_protocol.h>
+#include <http_request.h>
 #include <apr_strings.h>
 #include <ap_regex.h>
 
@@ -535,5 +537,54 @@ apr_hash_t *argparse(request_rec *r, const char *raw_args, const char *sep, bool
 
     return form;
  }
+
+
+// Issues a subrequest and captures the response and the ETag
+static int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
+    char **psETag)
+
+{
+    static ap_filter_rec_t *receive_filter = NULL;
+    if (!receive_filter) {
+        receive_filter = ap_get_output_filter_handle("Receive");
+        if (!receive_filter)
+            return HTTP_INTERNAL_SERVER_ERROR; // Receive not found
+    }
+
+    receive_ctx rctx;
+    rctx.buffer = dst.buffer;
+    rctx.maxsize = dst.size;
+    rctx.size = 0;
+    rctx.overflow = 0;
+
+    request_rec *sr = ap_sub_req_lookup_uri(lcl_path, r, r->output_filters);
+    ap_filter_t *rf = ap_add_output_filter_handle(receive_filter, &rctx,
+        sr, sr->connection);
+    int code = ap_run_sub_req(sr);
+    dst.size = rctx.size;
+    const char *sETag = apr_table_get(sr->headers_out, "ETag");
+    if (psETag && sETag)
+        *psETag = apr_pstrdup(r->pool, sETag);
+    ap_remove_output_filter(rf);
+    ap_destroy_sub_req(sr);
+    return code;  // returns APR_SUCCESS or http code
+}
+
+// Get a remote tile, using the MRLC protocol
+// if psETag is provided, the ETAG from the response is saved
+static int get_remote_tile(request_rec *r, const char *remote, const sloc_t &tile,
+    storage_manager &dst, char **psETag, const char *suffix)
+{
+#define FMT APR_INT64_T_FMT
+    char *stile = apr_psprintf(r->pool, "/%" FMT "/%" FMT "/%" FMT "/%" FMT,
+        tile.z, tile.l, tile.y, tile.x
+    );
+#undef FMT
+    if (tile.z == 0)
+        stile += 2; // Skip the leading 0 parameter
+
+    char *sub_uri = apr_pstrcat(r->pool, remote, "/tile", stile, suffix, NULL);
+    return get_response(r, sub_uri, dst, psETag);
+}
 
 NS_AHTSE_END

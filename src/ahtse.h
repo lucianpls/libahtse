@@ -381,6 +381,19 @@ DLL_PUBLIC apr_hash_t *argparse(request_rec *r,
     const char *sep = "&",
     bool multi = false);
 
+//
+// Issues a subrequest to the local path and returns the content and the ETag
+// Returns APR_SUCESS or source http response
+// Returns HTTP_INTERNAL_SERVER_ERROR if mod_receive is not available
+//
+static int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
+    char **psETag = NULL);
+
+// Like get_response, but using the tile location to generate the local path
+// using the M/L/R/C notation
+static int get_remote_tile(request_rec *r, const char *remote, const sloc_t &tile,
+    storage_manager &dst, char **psETag = NULL, const char *suffix = NULL);
+
 /*  TEMPLATES
  */
 
