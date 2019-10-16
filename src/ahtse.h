@@ -407,7 +407,7 @@ static inline int get_remote_tile(request_rec *r, const char *remote, const sloc
 // Returns the number of bytes read or 0 on error
 // If msg is not null, *msg on return will be a error message string
 DLL_PUBLIC int range_read(request_rec *r, const char *url, apr_off_t offset,
-    storage_manager &dst, int tries = 4, char **msg = nullptr);
+    storage_manager &dst, int tries = 4, const char **msg = nullptr);
 
 /*  TEMPLATES
  */
