@@ -544,7 +544,7 @@ int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     char **psETag)
 
 {
-    static ap_filter_rec_t *receive_filter = NULL;
+    static ap_filter_rec_t *receive_filter = nullptr;
     if (!receive_filter) {
         receive_filter = ap_get_output_filter_handle("Receive");
         if (!receive_filter)
@@ -579,6 +579,63 @@ char *pMRLC(apr_pool_t *pool, const char *prefix, const sloc_t &tile, const char
     if (0 == tile.z)
         stile += 2;
     return apr_pstrcat(pool, prefix, "/tile", stile, suffix, NULL);
+}
+
+int range_read(request_rec *r, const char *url, apr_off_t offset,
+    storage_manager &dst, int tries, const char **msg)
+{
+    ap_filter_rec_t *receive_filter = nullptr;
+    ap_get_output_filter_handle("Receive");
+    if (!receive_filter) {
+        receive_filter = ap_get_output_filter_handle("Receive");
+        if (!receive_filter) {
+            if (msg)
+                *msg = "Receive filter not found";
+            return 0; // Receive not found
+        }
+    }
+
+    receive_ctx rctx;
+    rctx.buffer = dst.buffer;
+    rctx.maxsize = dst.size;
+    rctx.size = 0;
+
+    char *srange = apr_psprintf(r->pool,
+        "bytes=%" APR_UINT64_T_FMT "-%" APR_UINT64_T_FMT,
+        offset, offset + dst.size);
+
+    // S3 may return less than requested, so we retry the request a couple of times
+    bool failed = false;
+    apr_time_t now = apr_time_now();
+    do {
+        request_rec *sr = ap_sub_req_lookup_uri(url, r, r->output_filters);
+        apr_table_setn(sr->headers_in, "Range", srange);
+        ap_filter_t *rf = ap_add_output_filter_handle(receive_filter, &rctx,
+            sr, sr->connection);
+        int status = ap_run_sub_req(sr);
+        int sr_status = sr->status;
+        ap_remove_output_filter(rf);
+        ap_destroy_sub_req(sr);
+
+        if (status != APR_SUCCESS)
+            failed = true;
+        else {
+            switch (sr_status) {
+            case HTTP_PARTIAL_CONTENT:
+                if (0 == tries--) {
+                    *msg = "Retries exhausted";
+                    failed = true;
+                }
+            case HTTP_OK:
+                break;
+            default: // Any other return code is unrecoverable
+                *msg = apr_psprintf(r->pool, "Remote responds with %d", sr_status);
+                failed = true;
+            }
+        }
+    } while (!failed && rctx.size != dst.size);
+
+    return failed ? 0 : rctx.size;
 }
 
 NS_AHTSE_END
