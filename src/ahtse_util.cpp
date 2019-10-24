@@ -101,9 +101,11 @@ const char *add_regexp_to_array(apr_pool_t *p, apr_array_header_t **parr, const 
 {
     if (nullptr == *parr)
         *parr = apr_array_make(p, 2, sizeof(ap_rxplus_t *));
-    ap_rxplus_t **m = reinterpret_cast<ap_rxplus_t **>(apr_array_push(*parr));
-    *m = ap_rxplus_compile(p, pattern);
-    return (nullptr != *m) ? nullptr : "Bad regular expression";
+    auto m = ap_rxplus_compile(p, pattern);
+    if (!m)
+        return "Bad regular expression";
+    APR_ARRAY_PUSH(*parr, ap_rxplus_t *) = m;
+    return nullptr;
 }
 
 // Read a Key Value text file into a table
@@ -382,7 +384,6 @@ bool requestMatches(request_rec *r, apr_array_header_t *arr) {
 
 apr_array_header_t *tokenize(apr_pool_t *p, const char *src, char sep) {
     apr_array_header_t *arr = nullptr;
-
     // Skip the separators from the start of the string
     while (sep == *src)
         src++;
@@ -391,10 +392,8 @@ apr_array_header_t *tokenize(apr_pool_t *p, const char *src, char sep) {
         char *val = ap_getword(p, &src, sep);
         if (nullptr == arr)
             arr = apr_array_make(p, 10, sizeof(char *));
-        char **newelt = (char **)apr_array_push(arr);
-        *newelt = val;
+        APR_ARRAY_PUSH(arr, char *) = val;
     }
-
     return arr;
 }
 
