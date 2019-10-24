@@ -605,7 +605,6 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
 
     // S3 may return less than requested, so we retry the request a couple of times
     bool failed = false;
-    apr_time_t now = apr_time_now();
     do {
         request_rec *sr = ap_sub_req_lookup_uri(url, r, r->output_filters);
         apr_table_setn(sr->headers_in, "Range", srange);
