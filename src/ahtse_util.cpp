@@ -440,6 +440,7 @@ int sendImage(request_rec *r, const storage_manager &src, const char *mime_type)
     // Finally, the data itself
     ap_set_content_length(r, src.size);
     ap_rwrite(src.buffer, src.size, r);
+    ap_rflush(r);
     // Response is done
     return OK;
 }
