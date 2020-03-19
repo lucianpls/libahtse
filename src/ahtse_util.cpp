@@ -567,7 +567,7 @@ int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
         *psETag = apr_pstrdup(r->pool, sETag);
     ap_remove_output_filter(rf);
     ap_destroy_sub_req(sr);
-    return code;  // returns APR_SUCCESS or http code
+    return 200 == code ? APR_SUCCESS: code;  // returns APR_SUCCESS or http code
 }
 
 // Builds an MRLC uri, suffix optional

@@ -385,6 +385,7 @@ DLL_PUBLIC apr_hash_t *argparse(request_rec *r,
 // Issues a subrequest to the local path and returns the content and the ETag
 // Returns APR_SUCESS or source http response
 // Returns HTTP_INTERNAL_SERVER_ERROR if mod_receive is not available
+// The *psETag is allocated from r->pool, if psETag != NULL
 //
 DLL_PUBLIC int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     char **psETag = NULL);
