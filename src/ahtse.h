@@ -156,6 +156,9 @@ struct sz {
     const bool operator==(const struct sz& other) const {
         return 0 == memcmp(this, &other, sizeof(other));
     }
+    const bool operator!=(const struct sz& other) const {
+        return !operator==(other);
+    }
 };
 
 // Works as location also
