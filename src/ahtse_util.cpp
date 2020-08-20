@@ -559,14 +559,15 @@ int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     request_rec *sr = ap_sub_req_lookup_uri(lcl_path, r, r->output_filters);
     ap_filter_t *rf = ap_add_output_filter_handle(receive_filter, &rctx,
         sr, sr->connection);
-    int code = ap_run_sub_req(sr);
+    auto code = ap_run_sub_req(sr); // This returns SUCCESS most of the time
+    auto status = sr->status;
     dst.size = rctx.size;
     const char *sETag = apr_table_get(sr->headers_out, "ETag");
     if (psETag && sETag)
         *psETag = apr_pstrdup(r->pool, sETag);
     ap_remove_output_filter(rf);
     ap_destroy_sub_req(sr);
-    return 200 == code ? APR_SUCCESS: code;  // returns APR_SUCCESS or http code
+    return 200 == status ? APR_SUCCESS: status;  // returns APR_SUCCESS or http code
 }
 
 // Builds an MRLC uri, suffix optional
