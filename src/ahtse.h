@@ -151,7 +151,12 @@ DLL_PUBLIC int GDTGetSize(GDALDataType dt, int num = 1);
 DLL_PUBLIC GDALDataType getDT(const char *name);
 
 // Separate channels and level, just in case
-struct sz { apr_int64_t x, y, z, c, l; };
+struct sz {
+    apr_int64_t x, y, z, c, l;
+    const bool operator==(const struct sz& other) const {
+        return 0 == memcmp(this, &other, sizeof(other));
+    }
+};
 
 // Works as location also
 #define sloc_t sz
