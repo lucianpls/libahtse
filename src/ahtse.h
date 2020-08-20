@@ -398,18 +398,18 @@ DLL_PUBLIC apr_hash_t *argparse(request_rec *r,
 DLL_PUBLIC int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     char **psETag = NULL);
 
-// Builds an MRLC uri, suffix optional
-DLL_PUBLIC char *pMRLC(apr_pool_t *pool, const char *prefix, const sloc_t &tile,
+// Builds an MLRC uri, suffix optional
+DLL_PUBLIC char *pMLRC(apr_pool_t *pool, const char *prefix, const sloc_t &tile,
     const char *suffix = NULL);
 
 // Like get_response, but using the tile location to generate the local path
 // using the M/L/R/C notation
 
-// Builds and issues an MRLC uri, using pMRLC and get_response
+// Builds and issues an MLRC uri, using pMLRC and get_response
 static inline int get_remote_tile(request_rec *r, const char *remote, const sloc_t &tile,
     storage_manager &dst, char **psETag, const char *suffix)
 {
-    return get_response(r, pMRLC(r->pool, remote, tile, suffix), dst, psETag);
+    return get_response(r, pMLRC(r->pool, remote, tile, suffix), dst, psETag);
 }
 
 // Issues a range read to URL, based on offset and dst.size

@@ -570,8 +570,8 @@ int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     return 200 == status ? APR_SUCCESS: status;  // returns APR_SUCCESS or http code
 }
 
-// Builds an MRLC uri, suffix optional
-char *pMRLC(apr_pool_t *pool, const char *prefix, const sloc_t &tile, const char *suffix) {
+// Builds an MLRC uri, suffix optional
+char *pMLRC(apr_pool_t *pool, const char *prefix, const sloc_t &tile, const char *suffix) {
 #define FMT APR_INT64_T_FMT
     char *stile = apr_psprintf(pool, "/%" FMT "/%" FMT "/%" FMT "/%" FMT,
         tile.z, tile.l, tile.y, tile.x);
