@@ -304,11 +304,10 @@ apr_uint64_t base32decode(const char *is, int *flag) {
     return value;
 }
 
-void tobase32(apr_uint64_t value, char *buffer, int flag) {
+void tobase32(apr_uint64_t value, char *buffer, int b65) {
     static char b32digits[] = "0123456789abcdefghijklmnopqrstuv";
-    // First char has the flag bit
-    if (flag) flag = 1; // Normalize value
-    buffer[0] = b32digits[(((value >> 60) & 0xf) << 1) | flag];
+    // First char holds the 65th bit, which is stored as if it would be in position 60!
+    buffer[0] = b32digits[(((value >> 60) & 0xf) << 1) | (b65 ? 1 : 0)];
     // Five bits at a time, from the top, 60 bits in groups of 5
     for (int i = 1; i < 13; i++)
         buffer[i] = b32digits[(value >> (60 - i * 5)) & 0x1f];

@@ -306,11 +306,13 @@ DLL_PUBLIC const char *configRaster(apr_pool_t *pool,
 // Reads a bounding box, x,y,X,Y order.  Expects up to four numbers in C locale, comma separated
 DLL_PUBLIC const char *getBBox(const char *line, bbox_t &bbox);
 
-// From a string in base32 returns a 64bit int plus the extra boolean flag
-DLL_PUBLIC apr_uint64_t base32decode(const char *is, int *flag);
+// From a string in base32 returns a 64 + 1 bit integer
+// The b65 is the lowest bit of first character, as if it would be in position 60
+DLL_PUBLIC apr_uint64_t base32decode(const char *is, int *b65);
 
-// Encode a 64 bit integer to base32 string. Buffer should be at least 13 chars
-DLL_PUBLIC void tobase32(apr_uint64_t value, char *buffer, int flag = 0);
+// Encode a 64 + 1 bit integer to base32 string. Buffer should be at least 13 chars
+// This is the reverse of the function declared above
+DLL_PUBLIC void tobase32(apr_uint64_t value, char *buffer, int b65 = 0);
 
 //
 // Read the empty file in a provided storage buffer
