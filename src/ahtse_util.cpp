@@ -267,7 +267,6 @@ const char *getBBox(const char *line, bbox_t &bbox)
     bbox.xmax = strtod(l, &l);
     if (*l++ != ',') goto done;
     bbox.ymax = strtod(l, &l);
-    if (*l++ != ',') goto done;
     message = nullptr;
 
 done:
