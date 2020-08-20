@@ -293,12 +293,12 @@ apr_uint64_t base32decode(const char *is, int *flag) {
     const unsigned char *s = reinterpret_cast<const unsigned char *>(is);
     while (*s == static_cast<unsigned char>('"'))
         s++; // Skip quotes
-    *flag = b32(*s) & 1; // Pick up the flag, least bit of top char
+    *flag = b32(*s) & 1; // Pick up the nodata flag, least bit of first char
                          // Initial value ignores the flag
     int digits = 0; // How many base32 digits we've seen
-    for (int v = (b32(*s++) >> 1); v >= 0; v = b32(*s++), digits++)
+    for (int v = (b32(*s++) >> 1); v >= 0 && digits <= 13; v = b32(*s++), digits++)
         value = (value << 5) + v;
-    // Trailing zeros are missing if digits < 13
+    // Assume trailing zeros are missing if digits < 13
     if (digits < 13)
         value <<= 5 * (13 - digits);
     return value;
@@ -308,13 +308,10 @@ void tobase32(apr_uint64_t value, char *buffer, int flag) {
     static char b32digits[] = "0123456789abcdefghijklmnopqrstuv";
     // First char has the flag bit
     if (flag) flag = 1; // Normalize value
-    buffer[0] = b32digits[((value & 0xf) << 1) | flag];
-    value >>= 4; // Encoded 4 bits
-                 // Five bits at a time, 60 bytes
-    for (int i = 1; i < 13; i++) {
-        buffer[i] = b32digits[value & 0x1f];
-        value >>= 5;
-    }
+    buffer[0] = b32digits[(((value >> 60) & 0xf) << 1) | flag];
+    // Five bits at a time, from the top, 60 bits in groups of 5
+    for (int i = 1; i < 13; i++)
+        buffer[i] = b32digits[(value >> (60 - i * 5)) & 0x1f];
     buffer[13] = '\0';
 }
 
