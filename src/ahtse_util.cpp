@@ -546,17 +546,24 @@ int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
             return HTTP_INTERNAL_SERVER_ERROR; // Receive not found
     }
 
+    request_rec *sr = ap_sub_req_lookup_uri(lcl_path, r, r->output_filters);
+    // if status is not 200 here, no point in going further
+    if (sr->status != HTTP_OK)
+        return sr->status;
+
     receive_ctx rctx;
     rctx.buffer = dst.buffer;
     rctx.maxsize = dst.size;
     rctx.size = 0;
     rctx.overflow = 0;
 
-    request_rec *sr = ap_sub_req_lookup_uri(lcl_path, r, r->output_filters);
     ap_filter_t *rf = ap_add_output_filter_handle(receive_filter, &rctx,
         sr, sr->connection);
     auto code = ap_run_sub_req(sr); // This returns SUCCESS most of the time
     auto status = sr->status;
+    // If code is not SUCCESS, then it is the status
+    if (OK != code)
+        status = code;
     dst.size = rctx.size;
     const char *sETag = apr_table_get(sr->headers_out, "ETag");
     if (psETag && sETag)
