@@ -8,6 +8,8 @@
  */
 
 #include "JPEG_codec.h"
+#include <algorithm>
+#include <string>
 
 NS_AHTSE_START
 
@@ -91,13 +93,29 @@ const char *jpeg_stride_decode(codec_params &params,
 const char *jpeg_encode(jpeg_params &params, 
     const TiledRaster &raster, storage_manager &src, storage_manager &dst)
 {
-    if (GDTGetSize(raster.datatype) == 1)
-        return jpeg8_encode(params, raster, src, dst);
-    if (GDTGetSize(raster.datatype) == 1)
-        return jpeg12_encode(params, raster, src, dst);
-    sprintf(params.error_message, 
-        "Usage error, only 8 and 12 bit input can be encoded as JPEG");
-    return params.error_message;
+    const char* message = nullptr;
+    switch (GDTGetSize(raster.datatype)) {
+    case 1:
+        message = jpeg8_encode(params, raster, src, dst);
+        break;
+    case 2:
+        message = jpeg8_encode(params, raster, src, dst);
+        break;
+    default:
+        sprintf(params.error_message,
+            "Usage error, only 8 and 12 bit input can be encoded as JPEG");
+        message = params.error_message;
+    }
+    if (!message)
+        return nullptr;
+    // Had an error reported
+    memcpy(params.error_message, message, std::min<size_t>(sizeof(params.error_message) - 1, strlen(message)));
+    if (std::string::npos != std::string(message).find("Write to EMS")) {
+        // Convert weird message to the actual reason
+        sprintf(params.error_message, "Write buffer too small");
+        message = params.error_message;
+    }
+    return message;
 }
 
 NS_AHTSE_END
