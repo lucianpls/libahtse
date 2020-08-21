@@ -73,7 +73,13 @@ static void init_or_terminate_destination(j_compress_ptr /* cinfo */) {}
 static boolean fill_input_buffer_dec(j_decompress_ptr /* cinfo */) { return TRUE; }
 
 // Called if the buffer provided is too small
-static boolean empty_output_buffer(j_compress_ptr /* cinfo */) { return FALSE; }
+// Can't keep returning false, it will get called forever
+static boolean empty_output_buffer(j_compress_ptr cinfo) { 
+    // Use EMS write message as a flag
+    ERREXIT(cinfo, JERR_EMS_WRITE);
+    // Not reached
+    return FALSE;
+}
 
 //
 // JPEG marker processor, for the Zen app3 marker
