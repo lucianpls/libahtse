@@ -197,6 +197,6 @@ DLL_LOCAL int RLEC3Packer::store(storage_manager *src, storage_manager *dst)
         return 0; // Failed, destination might overflow
     Byte c = getLeastUsed(reinterpret_cast<const Byte *>(src->buffer), src->size);
     *dst->buffer++ = static_cast<char>(c);
-    dst->size = 1 + toYarn(src->buffer, dst->buffer, src->size, c);
+    dst->size = 1 + static_cast<int>(toYarn(src->buffer, dst->buffer, src->size, c));
     return 1; // Success, size is in dst->size
 }

@@ -35,7 +35,7 @@ static void get_data(png_structp pngp, png_bytep data, png_size_t length)
         throw "PNG decode expects more data than given";
     memcpy(data, src->buffer, length);
     src->buffer += length;
-    src->size -= length;
+    src->size -= static_cast<int>(length);
 }
 
 // Write memory handler for PNG
@@ -46,7 +46,7 @@ static void store_data(png_structp pngp, png_bytep data, png_size_t length)
         throw static_cast<png_const_charp>("PNG encode buffer overflow");
     memcpy(dst->buffer, data, length);
     dst->buffer += length;
-    dst->size -= length;
+    dst->size -= static_cast<int>(length);
 }
 
 const char *png_stride_decode(codec_params &params,
@@ -152,7 +152,7 @@ const char *png_encode(png_params &params, const TiledRaster &raster,
             png_set_swap(pngp);
 #endif
 
-        int rowbytes = png_get_rowbytes(pngp, infop);
+        auto rowbytes = png_get_rowbytes(pngp, infop);
         for (size_t i = 0; i < png_rowp.size(); i++)
             png_rowp[i] = reinterpret_cast<png_bytep>(src.buffer + i * rowbytes);
 

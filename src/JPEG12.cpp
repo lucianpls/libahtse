@@ -302,7 +302,7 @@ const char *jpeg12_encode(jpeg_params &params, const TiledRaster &raster, storag
     jpeg_finish_compress(&cinfo);
 
     jpeg_destroy_compress(&cinfo);
-    dst.size -= mgr.free_in_buffer;
+    dst.size -= static_cast<int>(mgr.free_in_buffer);
 
     return params.error_message[0] != 0 ?
         params.error_message : nullptr;
