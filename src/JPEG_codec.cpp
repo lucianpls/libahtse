@@ -99,7 +99,7 @@ const char *jpeg_encode(jpeg_params &params,
         message = jpeg8_encode(params, raster, src, dst);
         break;
     case 2:
-        message = jpeg8_encode(params, raster, src, dst);
+        message = jpeg12_encode(params, raster, src, dst);
         break;
     default:
         sprintf(params.error_message,
