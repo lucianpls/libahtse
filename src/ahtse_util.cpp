@@ -146,8 +146,8 @@ static void init_rsets(apr_pool_t *pool, TiledRaster &raster) {
     ap_assert(raster.pagesize.z == 1);
 
     rset level;
-    level.rx = (raster.bbox.xmax - raster.bbox.xmin) / raster.pagesize.x;
-    level.ry = (raster.bbox.ymax - raster.bbox.ymin) / raster.pagesize.y;
+    level.rx = (raster.bbox.xmax - raster.bbox.xmin) / raster.size.x;
+    level.ry = (raster.bbox.ymax - raster.bbox.ymin) / raster.size.y;
     level.w = static_cast<int>(1 + (raster.size.x - 1) / raster.pagesize.x);
     level.h = static_cast<int>(1 + (raster.size.y - 1) / raster.pagesize.y);
     level.tiles = 0;
