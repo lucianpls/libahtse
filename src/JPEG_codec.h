@@ -3,7 +3,7 @@
 *
 * Shared code for AHTSE JPEG codec
 *
-* (C) Lucian Plesea 2019
+* (C) Lucian Plesea 2019-2020
 */
 
 #if !defined(JPEG_CODEC_H)

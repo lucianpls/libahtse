@@ -42,6 +42,12 @@
     <ClCompile Include="src\PNG_codec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Lerc1Image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LERC_codec.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\BitMask2D.h">
@@ -87,6 +93,9 @@
       <Filter>Header Files\jpeg12</Filter>
     </ClInclude>
     <ClInclude Include="src\ahtse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Lerc1Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

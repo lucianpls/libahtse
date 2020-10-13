@@ -3,7 +3,7 @@
 *
 * Public interface to libahtse
 *
-* (C) Lucian Plesea 2019
+* (C) Lucian Plesea 2019-2020
 */
 
 #if !defined(AHTSE_H)
@@ -269,6 +269,10 @@ struct png_params : codec_params {
     // TODO: Have a way to pass the transparent color when has_transparency is on
 };
 
+struct lerc_params : codec_params {
+
+};
+
 #define READ_RIGHTS APR_FOPEN_READ | APR_FOPEN_BINARY | APR_FOPEN_LARGEFILE
 // Accept empty tiles up to this size
 #define MAX_READ_SIZE (1024*1024)
@@ -372,6 +376,15 @@ DLL_PUBLIC const char *png_encode(png_params &params,
     const TiledRaster &raster, storage_manager &src, storage_manager &dst);
 // Based on the raster configuration, populates a png parameter structure
 DLL_PUBLIC int set_def_png_params(const TiledRaster &raster, png_params *params);
+
+// In LERC_codec.cpp
+
+DLL_PUBLIC const char* lerc_stride_decode(lerc_params & params,
+    const TiledRaster & raster, storage_manager & src, void* buffer);
+DLL_PUBLIC const char* lerc_encode(lerc_params & params,
+    const TiledRaster & raster, storage_manager & src, storage_manager & dst);
+// Based on the raster configuration, populates a png parameter structure
+DLL_PUBLIC int set_def_lerc_params(const TiledRaster & raster, lerc_params * params);
 
 // Skip the leading white spaces and return true for "On" or "1"
 // otherwise it returns false

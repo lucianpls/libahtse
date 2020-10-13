@@ -8,7 +8,7 @@
 * The alternative used is to return strings containing the error message, leaving the 
 * called decide if logging is necessary
 *
-* (C) Lucian Plesea 2019
+* (C) Lucian Plesea 2019-2020
 *
 */
 

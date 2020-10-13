@@ -23,6 +23,8 @@
     <ClCompile Include="src\JPEG12.cpp" />
     <ClCompile Include="src\JPEG8.cpp" />
     <ClCompile Include="src\JPEG_codec.cpp" />
+    <ClCompile Include="src\Lerc1Image.cpp" />
+    <ClCompile Include="src\LERC_codec.cpp" />
     <ClCompile Include="src\Packer_RLE.cpp" />
     <ClCompile Include="src\PNG_codec.cpp" />
   </ItemGroup>
@@ -42,6 +44,7 @@
     <ClInclude Include="src\jpeg12-6b\jpeglib.h" />
     <ClInclude Include="src\jpeg12-6b\jversion.h" />
     <ClInclude Include="src\JPEG_codec.h" />
+    <ClInclude Include="src\Lerc1Image.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitattributes" />
@@ -162,7 +165,7 @@ copy /y src\ahtse.h \Apache24\include</Command>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libhttpd.lib;libapr-2.lib;jpeg.lib;libjpeg12.lib;libpng.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libhttpd.lib;libapr.lib;jpeg.lib;libjpeg12.lib;libpng.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt;libmsvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
     <PreBuildEvent>
