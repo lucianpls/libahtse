@@ -460,13 +460,10 @@ apr_status_t getMLRC(request_rec *r, sz &tile, int need_m) {
     if (tokens->nelts < 3 || (need_m && tokens->nelts < 4))
         return APR_BADARG;
 
-    tile.x = apr_atoi64(*(char **)apr_array_pop(tokens));
-    if (errno) return errno;
-    tile.y = apr_atoi64(*(char **)apr_array_pop(tokens));
-    if (errno) return errno;
-    tile.l = apr_atoi64(*(char **)apr_array_pop(tokens));
-    if (errno) return errno;
-    tile.z = need_m ? apr_atoi64(*(char **)apr_array_pop(tokens)) : 0;
+    tile.x = apr_atoi64(ARRAY_POP(tokens, char*)); if (errno) return errno;
+    tile.y = apr_atoi64(ARRAY_POP(tokens, char*)); if (errno) return errno;
+    tile.l = apr_atoi64(ARRAY_POP(tokens, char*)); if (errno) return errno;
+    tile.z = need_m ? apr_atoi64(ARRAY_POP(tokens, char *)) : 0;
     // Z defaults to 0
     if (errno) tile.z = 0;
     return APR_SUCCESS;
