@@ -1,10 +1,8 @@
 /*
-* PNG_codec.cpp
-* C++ Wrapper around libpng, providing encoding and decoding functions
+* LERC_codec.cpp
+* C++ Wrapper around lerc1, providing encoding and decoding functions
 *
-* This code only handles a basic subset of the PNG capabilities
-*
-* (C)Lucian Plesea 2016-2020
+* (C)Lucian Plesea 2020
 */
 
 #include "ahtse.h"
@@ -28,4 +26,3 @@ int set_def_lerc_params(const TiledRaster& raster, lerc_params* params)
 {
     return 0;
 }
-

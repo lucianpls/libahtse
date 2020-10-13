@@ -166,7 +166,7 @@ copy /y src\ahtse.h \Apache24\include</Command>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>libhttpd.lib;libapr.lib;jpeg.lib;libjpeg12.lib;libpng.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <IgnoreSpecificDefaultLibraries>libcmt;libmsvcrt</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>libcmt;msvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
     <PreBuildEvent>
       <Command>cd $(ProjectDir)src\jpeg12-6b
