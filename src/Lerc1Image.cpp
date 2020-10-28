@@ -117,6 +117,7 @@ int BitMaskV1::RLEcompress(Byte* dst) const {
     // cppcheck-suppress uselessAssignmentPtrArg
     FLUSH;
     (void)oddrun;
+    (void)dst;
     WRITE_COUNT(EOT); // End marker
     // return compressed output size
     return int(pCnt - start);
@@ -211,7 +212,7 @@ static bool blockread(Byte** ppByte, size_t& size, std::vector<unsigned int>& d)
     Byte numBits = **ppByte;
     Byte n = stib67[numBits >> 6];
     numBits &= 63;  // bits 0-5;
-    if (numBits >= 32 || n == 0 || size < static_cast<size_t>(n))
+    if (numBits >= 32 || n == 0 || size < 1 + static_cast<size_t>(n))
         return false;
     *ppByte += 1;
     size -= 1;
@@ -384,7 +385,7 @@ bool Lerc1Image::write(Byte** ppByte, double maxZError, bool zPart) const
             if (numBytesOpt > 0) // cnt part is binary mask, use fast RLE class
                 numBytesWritten = mask.RLEcompress(*ppByte);
         }
-        else { // encode tiles to buffer, alwasy z part
+        else { // encode tiles to buffer, always z part
             float maxVal;
             if (!writeTiles(maxZError, numTilesVert, numTilesHori,
                 *ppByte, numBytesWritten, maxVal))
@@ -400,6 +401,9 @@ bool Lerc1Image::write(Byte** ppByte, double maxZError, bool zPart) const
     return true;
 #undef WRVAR
 }
+
+// To avoid excessive memory allocation attempts, this is still 1.8GB!!
+static size_t TOO_LARGE = 1800 * 1000 * 1000 / static_cast<int>(sizeof(float));
 
 bool Lerc1Image::read(Byte** ppByte, size_t& nRemainingBytes,
     double maxZError, bool ZPart)
@@ -433,8 +437,7 @@ bool Lerc1Image::read(Byte** ppByte, size_t& nRemainingBytes,
         return false;
     if (width <= 0 || width > 20000 || height <= 0 || height > 20000 || maxZErrorInFile > maxZError)
         return false;
-    // To avoid excessive memory allocation attempts, this is still 1.8GB!!
-    if (width * height > 1800 * 1000 * 1000 / static_cast<int>(sizeof(float)))
+    if (static_cast<size_t>(width) * height > TOO_LARGE)
         return false;
 
     if (ZPart) {
@@ -481,6 +484,41 @@ bool Lerc1Image::read(Byte** ppByte, size_t& nRemainingBytes,
         nRemainingBytes -= numBytes;
         ZPart = !ZPart;
     } while (ZPart); // Stop after writing Z
+    return true;
+}
+
+// Initialize from the given header, return true if it worked
+// It could read more info from the header, if needed
+bool Lerc1Image::getwh(const Byte* pByte, size_t nBytes, int &width, int &height)
+{
+    size_t len = sCntZImage.length();
+    if (nBytes < len)
+        return false;
+
+    std::string typeStr(reinterpret_cast<const char*>(pByte), len);
+    if (typeStr != sCntZImage)
+        return false;
+    pByte += len;
+    nBytes -= len;
+
+    int version = 0, type = 0;
+    double maxZErrorInFile = 0;
+
+    if (nBytes < (4 * sizeof(int) + sizeof(double)))
+        return false;
+    RDVAR(pByte, version);
+    RDVAR(pByte, type);
+    RDVAR(pByte, height);
+    RDVAR(pByte, width);
+    RDVAR(pByte, maxZErrorInFile);
+
+    if (version != CNT_Z_VER || type != CNT_Z)
+        return false;
+    if (width <= 0 || width > 20000 || height <= 0 || height > 20000)
+        return false;
+    if (static_cast<size_t>(width) * height > TOO_LARGE)
+        return false;
+
     return true;
 #undef RDVAR
 }
