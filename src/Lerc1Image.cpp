@@ -154,14 +154,13 @@ static const Byte bits67[4] = { 0x80, 0x40, 0xc0, 0 }; // shifted left 6 bits
 static const Byte stib67[4] = { 4, 2, 1, 0 }; // 0 is invalid
 static int numBytesUInt(unsigned int k) { return (k <= 0xff) ? 1 : (k <= 0xffff) ? 2 : 4; }
 
-// see the old stream IO functions below on how to call.
-// if you change write(...) / read(...), don't forget to update computeNumBytesNeeded(...).
-static bool blockwrite(Byte** ppByte, const std::vector<unsigned int>& d) {
-    if (!ppByte || d.empty())
+// Lerc encode a vector to a buffer at *ppByte
+static bool blockwrite(Byte** ppByte, const std::vector<unsigned int>& src) {
+    if (!ppByte || src.empty())
         return false;
 
-    unsigned int maxElem = *std::max_element(d.begin(), d.end());
-    unsigned int numElements = (unsigned int)d.size();
+    unsigned int maxElem = *std::max_element(src.begin(), src.end());
+    unsigned int numElements = (unsigned int)src.size();
     int n = numBytesUInt(numElements);
     int numBits = 0; // 0 to 23
     while (maxElem >> numBits)
@@ -179,7 +178,7 @@ static bool blockwrite(Byte** ppByte, const std::vector<unsigned int>& d) {
 
     int bits = 32; // Available
     unsigned int acc = 0; // Accumulator
-    for (unsigned int val : d) {
+    for (unsigned int val : src) {
         if (bits >= numBits) { // no accumulator overflow
             acc |= val << (bits - numBits);
             bits -= numBits;
@@ -205,7 +204,9 @@ static bool blockwrite(Byte** ppByte, const std::vector<unsigned int>& d) {
     return true;
 }
 
-static bool blockread(Byte** ppByte, size_t& size, std::vector<unsigned int>& d) {
+// Lerc decode from *ppByte into a vector presized to the max number of values
+// the vector will shrink to the actual number of values found in the block
+static bool blockread(Byte** ppByte, size_t& size, std::vector<unsigned int>& dst) {
     if (!ppByte || !size)
         return false;
 
@@ -221,12 +222,12 @@ static bool blockread(Byte** ppByte, size_t& size, std::vector<unsigned int>& d)
     memcpy(&numElements, *ppByte, n);
     *ppByte += n;
     size -= n;
-    if (static_cast<size_t>(numElements) > d.size())
-        return false;
-    d.resize(numElements);
+    if (static_cast<size_t>(numElements) > dst.size())
+        return false; // Block contains too many values
+    dst.resize(numElements);
     if (numBits == 0) { // Nothing to read, all zeros
-        d.resize(0);
-        d.resize(numElements, 0);
+        dst.resize(0);
+        dst.resize(numElements, 0);
         return true;
     }
 
@@ -237,7 +238,7 @@ static bool blockread(Byte** ppByte, size_t& size, std::vector<unsigned int>& d)
 
     int bits = 0; // Available in accumulator, at the high end
     unsigned int acc = 0;
-    for (unsigned int& val : d) {
+    for (unsigned int& val : dst) {
         if (bits >= numBits) { // Enough bits in accumulator
             val = acc >> (32 - numBits);
             acc <<= numBits;
@@ -333,9 +334,8 @@ unsigned int Lerc1Image::computeNumBytesNeededToWrite(double maxZError,
     return sz;
 }
 
-// if you change the file format, don't forget to update not only write and
-// read functions, and the file version number, but also the computeNumBytes...
-// and numBytes... functions
+// top level encode, size and parameters are already set
+// input data is contiguous at *ppByte
 bool Lerc1Image::write(Byte** ppByte, double maxZError, bool zPart) const
 {
 // Local macro, write an unaligned variable, adjust pointer
@@ -440,14 +440,10 @@ bool Lerc1Image::read(Byte** ppByte, size_t& nRemainingBytes,
     if (static_cast<size_t>(width) * height > TOO_LARGE)
         return false;
 
-    if (ZPart) {
-        if (width != getWidth() || height != getHeight())
+    if (ZPart && (getWidth() != width || getHeight() != height))
             return false;
-    }
-    else { // Resize clears the buffer
-        if (!resize(width, height))
+    if (!ZPart && !resize(width, height))
             return false;
-    }
 
     do {
         int numTilesVert = 0, numTilesHori = 0, numBytes = 0;
@@ -462,20 +458,19 @@ bool Lerc1Image::read(Byte** ppByte, size_t& nRemainingBytes,
 
         if (numBytes < 0 || nRemainingBytes < static_cast<size_t>(numBytes))
             return false;
-        if (ZPart) {
-            if (!readTiles(maxZErrorInFile, numTilesVert, numTilesHori, maxValInImg, *ppByte, numBytes))
+        if (ZPart && !readTiles(maxZErrorInFile, numTilesVert, numTilesHori, maxValInImg, *ppByte, numBytes))
                 return false;
-        }
-        else { // no tiling allowed for the cnt part
+
+        if (!ZPart) { // no tiling allowed for mask
             if (numTilesVert != 0 && numTilesHori != 0)
                 return false;
-            if (numBytes == 0) {   // cnt part is const
+            if (0 == numBytes) { // full or empty mask
                 if (maxValInImg != 0.0 && maxValInImg != 1.0)
                     return false; // Only 0 and 1 are valid
                 bool v = (maxValInImg != 0.0);
                 for (int k = 0; k < getSize(); k++)
                     mask.Set(k, v);
-            } else {// cnt part is binary mask, RLE compressed
+            } else { // binary mask, RLE compressed
                 if (!mask.RLEdecompress(*ppByte, static_cast<size_t>(numBytes)))
                     return false;
             }
@@ -486,6 +481,7 @@ bool Lerc1Image::read(Byte** ppByte, size_t& nRemainingBytes,
     } while (ZPart); // Stop after writing Z
     return true;
 }
+
 
 // Initialize from the given header, return true if it worked
 // It could read more info from the header, if needed
