@@ -272,6 +272,7 @@ struct png_params : codec_params {
 };
 
 struct lerc_params : codec_params {
+    double ndv; // Defaults to 0, MRF style
     float prec; // half of quantization step
 };
 
@@ -363,7 +364,7 @@ DLL_PUBLIC int sendEmptyTile(request_rec *r, const empty_conf_t &empty);
 DLL_PUBLIC const char *jpeg_stride_decode(codec_params &params, storage_manager &src, void *buffer);
 DLL_PUBLIC const char *jpeg_encode(jpeg_params &params, storage_manager &src, storage_manager &dst);
 // Based on the raster configuration, populates a jpeg parameter structure, must call before encode and decode
-DLL_PUBLIC int set_def_jpeg_params(const TiledRaster& raster, codec_params* params);
+DLL_PUBLIC int set_jpeg_params(const TiledRaster& raster, codec_params* params);
 
 // In PNG_codec.cpp
 // raster defines the expected tile
@@ -374,14 +375,14 @@ DLL_PUBLIC int set_def_jpeg_params(const TiledRaster& raster, codec_params* para
 DLL_PUBLIC const char *png_stride_decode(codec_params &params, storage_manager &src, void *buffer);
 DLL_PUBLIC const char *png_encode(png_params &params, storage_manager &src, storage_manager &dst);
 // Based on the raster configuration, populates a png parameter structure, must call before encode and decode
-DLL_PUBLIC int set_def_png_params(const TiledRaster &raster, png_params *params);
+DLL_PUBLIC int set_png_params(const TiledRaster &raster, png_params *params);
 
 // In LERC_codec.cpp
 // line_stride has to be zero, as stride decode is not handled by LERC1
 DLL_PUBLIC const char* lerc_stride_decode(codec_params & params, storage_manager & src, void* buffer);
 DLL_PUBLIC const char* lerc_encode(lerc_params & params, storage_manager & src, storage_manager & dst);
 // Based on the raster configuration, populates a png parameter structure
-DLL_PUBLIC int set_def_lerc_params(const TiledRaster & raster, lerc_params * params);
+DLL_PUBLIC int set_lerc_params(const TiledRaster & raster, lerc_params * params);
 
 // Skip the leading white spaces and return true for "On" or "1"
 // otherwise it returns false

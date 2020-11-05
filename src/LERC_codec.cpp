@@ -30,12 +30,12 @@ static bool FIsEqual(float v1, float v2) {
     return abs(v1 - v2) < 1e-12;
 }
 
-template<typename T> static void Lerc1ImgFill(Lerc1Image& zImg, T* src, const TiledRaster& raster)
+template<typename T> static void Lerc1ImgFill(Lerc1Image& zImg, T* src, const lerc_params &params)
 {
-    int w = raster.pagesize.x;
-    int h = raster.pagesize.y;
+    int w = static_cast<int>(params.size.x);
+    int h = static_cast<int>(params.size.y);
     zImg.resize(w, h);
-    const float ndv = static_cast<float>(raster.has_ndv ? raster.ndv : 0);
+    const float ndv = static_cast<float>(params.ndv);
     for (int row = 0; row < h; row++)
         for (int col = 0; col < w; col++) {
             auto val = static_cast<float>(*src++);
@@ -44,14 +44,13 @@ template<typename T> static void Lerc1ImgFill(Lerc1Image& zImg, T* src, const Ti
         }
 }
 
-const char* lerc_encode(lerc_params& params, const TiledRaster& raster,
-    storage_manager& src, storage_manager& dst)
+const char* lerc_encode(lerc_params& params, storage_manager& src, storage_manager& dst)
 {
     Lerc1Image zImg;
     auto pdst = reinterpret_cast<Lerc1NS::Byte*>(dst.buffer);
 
-    switch (raster.datatype) {
-#define FILL(T) Lerc1ImgFill(zImg, reinterpret_cast<T *>(src.buffer), raster)
+    switch (params.dt) {
+#define FILL(T) Lerc1ImgFill(zImg, reinterpret_cast<T *>(src.buffer), params)
     case GDT_Byte: FILL(uint8_t); break;
     case GDT_UInt16: FILL(uint16_t); break;
     case GDT_Int16: FILL(int16_t); break;
@@ -68,13 +67,15 @@ const char* lerc_encode(lerc_params& params, const TiledRaster& raster,
     return nullptr;
 }
 
-const char* lerc_stride_decode(codec_params& params, const TiledRaster& raster,
-    storage_manager& src, void* buffer)
+const char* lerc_stride_decode(codec_params& params, storage_manager& src, void* buffer)
 {
     return nullptr;
 }
 
-int set_def_lerc_params(const TiledRaster& raster, lerc_params* params)
+int set_lerc_params(const TiledRaster& raster, lerc_params* params)
 {
+    memset(params, 0, sizeof(lerc_params));
+    params->size = raster.pagesize;
+    params->dt = raster.datatype;
     return 0;
 }

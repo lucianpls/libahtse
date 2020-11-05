@@ -116,7 +116,7 @@ const char *jpeg_encode(jpeg_params &params, storage_manager &src, storage_manag
     return message;
 }
 
-int set_def_jpeg_params(const TiledRaster& raster, codec_params* params) {
+int set_jpeg_params(const TiledRaster& raster, codec_params* params) {
     memset(params, 0, sizeof(codec_params));
     params->size = raster.pagesize;
     params->dt = raster.datatype;

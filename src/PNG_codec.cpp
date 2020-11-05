@@ -172,7 +172,7 @@ const char *png_encode(png_params &params, storage_manager &src, storage_manager
     return nullptr;
 }
 
-int set_def_png_params(const TiledRaster &raster, png_params *params) {
+int set_png_params(const TiledRaster &raster, png_params *params) {
     // Pick some defaults
     // Only handles 8 or 16 bits
     memset(params, 0, sizeof(png_params));
