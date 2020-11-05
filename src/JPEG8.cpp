@@ -194,6 +194,10 @@ const char *jpeg8_stride_decode(codec_params &params, storage_manager &src, void
     if (cinfo.image_width != params.size.x || cinfo.image_height != params.size.y)
         sprintf(params.error_message, "Wrong JPEG size on input");
 
+    auto line_stride = params.line_stride;
+    if (0 == line_stride)
+        line_stride = params.size.c * params.size.x;
+
     // Only if the error message hasn't been set already
     if (params.error_message[0] == 0) {
         // Force output to desired number of channels
@@ -201,8 +205,8 @@ const char *jpeg8_stride_decode(codec_params &params, storage_manager &src, void
         jpeg_start_decompress(&cinfo);
         while (cinfo.output_scanline < cinfo.image_height) {
             // Do the math in bytes, because line_stride is in bytes
-            rp[0] = (JSAMPROW)((char *)buffer + params.line_stride * cinfo.output_scanline);
-            rp[1] = (JSAMPROW)((char *)buffer + params.line_stride * (cinfo.output_scanline + 1));
+            rp[0] = (JSAMPROW)((char *)buffer + line_stride * cinfo.output_scanline);
+            rp[1] = (JSAMPROW)((char *)buffer + line_stride * (cinfo.output_scanline + 1));
             jpeg_read_scanlines(&cinfo, JSAMPARRAY(rp), 2);
         }
 
