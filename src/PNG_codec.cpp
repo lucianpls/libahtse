@@ -62,11 +62,6 @@ const char *png_stride_decode(codec_params &params, storage_manager &src, void *
     char *message = nullptr;
     png_structp pngp = nullptr;
     png_infop infop = nullptr;
-    std::vector<png_bytep> png_rowp(static_cast<int>(params.size.y));
-    for (size_t i = 0; i < png_rowp.size(); i++) // line_stride is always in bytes
-        png_rowp[i] = reinterpret_cast<png_bytep>(
-            static_cast<char *>(buffer)+i * params.line_stride);
-
     png_uint_32 width, height;
     int bit_depth, ct;
     pngp = png_create_read_struct(PNG_LIBPNG_VER_STRING, &params, pngEH, pngEH);
@@ -109,6 +104,15 @@ const char *png_stride_decode(codec_params &params, storage_manager &src, void *
     // png_set_add_alpha(pngp, 255, PNG_FILTER_AFTER); // Add alpha if not there
     // Call this after using any of the png_set_*
     png_read_update_info(pngp, infop);
+
+    auto line_stride = static_cast<png_size_t>(params.line_stride);
+    if (0 == line_stride)
+        line_stride = png_get_rowbytes(pngp, infop);
+
+    std::vector<png_bytep> png_rowp(static_cast<int>(params.size.y));
+    for (size_t i = 0; i < png_rowp.size(); i++) // line_stride is always in bytes
+        png_rowp[i] = reinterpret_cast<png_bytep>(
+            static_cast<char*>(buffer) + i * line_stride);
 
     png_read_image(pngp, png_rowp.data());
     png_read_end(pngp, infop);
