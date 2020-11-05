@@ -204,7 +204,7 @@ struct TiledRaster {
     struct sz size, pagesize;
 
     // Generic data values
-    double ndv, min, max;
+    double ndv, min, max, precision;
     int has_ndv, has_min, has_max;
     int maxtilesize;
 
@@ -246,7 +246,9 @@ struct vfile_t {
 // For encoders, see format specific extensions below
 //
 struct codec_params {
-    // Line size in bytes
+    sz size;
+    GDALDataType dt; // data type
+    // Line size in bytes for decoding only
     apr_uint32_t line_stride;
     // Set if special data handling took place during decoding (zero mask on JPEG)
     apr_uint32_t modified;
@@ -270,7 +272,7 @@ struct png_params : codec_params {
 };
 
 struct lerc_params : codec_params {
-
+    float prec; // half of quantization step
 };
 
 #define READ_RIGHTS APR_FOPEN_READ | APR_FOPEN_BINARY | APR_FOPEN_LARGEFILE
@@ -358,11 +360,10 @@ DLL_PUBLIC int sendEmptyTile(request_rec *r, const empty_conf_t &empty);
 // buffer is the location of the first byte on the first line of decoded data
 // line_stride is the size of a line in buffer (larger or equal to decoded JPEG line)
 // Returns NULL if everything looks fine, or an error message
-DLL_PUBLIC const char *jpeg_stride_decode(codec_params &params, 
-    const TiledRaster &raster, storage_manager &src, void *buffer);
-
-DLL_PUBLIC const char *jpeg_encode(jpeg_params &params, 
-    const TiledRaster &raster, storage_manager &src, storage_manager &dst);
+DLL_PUBLIC const char *jpeg_stride_decode(codec_params &params, storage_manager &src, void *buffer);
+DLL_PUBLIC const char *jpeg_encode(jpeg_params &params, storage_manager &src, storage_manager &dst);
+// Based on the raster configuration, populates a jpeg parameter structure, must call before encode and decode
+DLL_PUBLIC int set_def_jpeg_params(const TiledRaster& raster, codec_params* params);
 
 // In PNG_codec.cpp
 // raster defines the expected tile
@@ -370,19 +371,15 @@ DLL_PUBLIC const char *jpeg_encode(jpeg_params &params,
 // buffer is the location of the first byte on the first line of decoded data
 // line_stride is the size of a line in buffer (larger or equal to decoded PNG line)
 // Returns NULL if everything looks fine, or an error message
-DLL_PUBLIC const char *png_stride_decode(codec_params &params,
-    const TiledRaster &raster, storage_manager &src, void *buffer);
-DLL_PUBLIC const char *png_encode(png_params &params,
-    const TiledRaster &raster, storage_manager &src, storage_manager &dst);
-// Based on the raster configuration, populates a png parameter structure
+DLL_PUBLIC const char *png_stride_decode(codec_params &params, storage_manager &src, void *buffer);
+DLL_PUBLIC const char *png_encode(png_params &params, storage_manager &src, storage_manager &dst);
+// Based on the raster configuration, populates a png parameter structure, must call before encode and decode
 DLL_PUBLIC int set_def_png_params(const TiledRaster &raster, png_params *params);
 
 // In LERC_codec.cpp
-
-DLL_PUBLIC const char* lerc_stride_decode(lerc_params & params,
-    const TiledRaster & raster, storage_manager & src, void* buffer);
-DLL_PUBLIC const char* lerc_encode(lerc_params & params,
-    const TiledRaster & raster, storage_manager & src, storage_manager & dst);
+// line_stride has to be zero, as stride decode is not handled by LERC1
+DLL_PUBLIC const char* lerc_stride_decode(codec_params & params, storage_manager & src, void* buffer);
+DLL_PUBLIC const char* lerc_encode(lerc_params & params, storage_manager & src, storage_manager & dst);
 // Based on the raster configuration, populates a png parameter structure
 DLL_PUBLIC int set_def_lerc_params(const TiledRaster & raster, lerc_params * params);
 

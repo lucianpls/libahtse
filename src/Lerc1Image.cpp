@@ -17,6 +17,9 @@ source distribution at:
 
 http://github.com/Esri/lerc/
 
+The source for this particular version was copied from
+https://github.com/OSGeo/gdal/blob/master/gdal/frmts/mrf/LERCV1/Lerc1Image.cpp
+
 Contributors:  Thomas Maurer
                Lucian Plesea
 */
