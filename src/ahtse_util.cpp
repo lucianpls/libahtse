@@ -32,6 +32,7 @@
 // setlocale
 #include <clocale>
 #include <cstring>
+#include <string>
 
 #include <algorithm>
 #include <unordered_map>
@@ -530,6 +531,68 @@ apr_hash_t *argparse(request_rec *r, const char *raw_args, const char *sep, bool
     return form;
  }
 
+int subr::fetch(const char *url, storage_manager& dst) {
+    static ap_filter_rec_t* receive_filter = nullptr;
+    if (!receive_filter) {
+        receive_filter = ap_get_output_filter_handle("Receive");
+        if (!receive_filter)
+            return HTTP_INTERNAL_SERVER_ERROR; // Receive not found
+    }
+
+    int failed = false;
+    char* srange = nullptr;
+    if (range.valid) 
+        srange = apr_psprintf(main->pool, "bytes=%" APR_UINT64_T_FMT "-%" APR_UINT64_T_FMT,
+                    range.offset, range.size);
+
+    do {
+        receive_ctx rctx;
+        rctx.buffer = dst.buffer;
+        rctx.maxsize = dst.size;
+        rctx.size = 0;
+
+        request_rec* sr = ap_sub_req_lookup_uri(url, main, main->output_filters);
+        if (range.valid)
+            apr_table_setn(sr->headers_in, "Range", srange);
+        if (!agent.empty())
+            apr_table_setn(sr->headers_in, "User-Agent", agent.c_str());
+        ap_filter_t* rf = ap_add_output_filter_handle(receive_filter, &rctx, sr, sr->connection);
+        int status = ap_run_sub_req(sr);
+        int sr_status = sr->status;
+        ap_remove_output_filter(rf);
+        // capture the tag, if any
+        ETag = apr_table_get(sr->headers_out, "ETag");
+        ap_destroy_sub_req(sr);
+
+        if (APR_SUCCESS != status) {
+            failed = true; // the request didn't work!
+            break;
+        }
+
+        // exit condition, got what we need
+        if ((range.valid && rctx.size == range.size) || (!range.valid && HTTP_OK == sr_status)) {
+            dst.size = rctx.size;
+            break;
+        }
+
+        switch (sr_status) {
+        case HTTP_OK:
+            break;
+        case HTTP_PARTIAL_CONTENT: // The only time we retry
+            if (0 == tries--) {
+                error_message = "Retries exhausted";
+                failed = true;
+            }
+            break;
+        default:
+            error_message = apr_psprintf(main->pool, "Remote responds with %d", sr_status);
+            failed = true;
+        }
+
+    } while (!failed);
+
+    return failed ? HTTP_NOT_FOUND : APR_SUCCESS;
+}
 
 // Issues a subrequest and captures the response and the ETag
 int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,

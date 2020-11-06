@@ -14,6 +14,7 @@
 #include <http_config.h>
 #include <cstdlib>
 #include <cmath>
+#include <string>
 
 #define APR_WANT_STRFUNC
 #define APR_WANT_MEMFUNC
@@ -401,6 +402,30 @@ DLL_PUBLIC apr_hash_t *argparse(request_rec *r,
     const char *raw_args = NULL,
     const char *sep = "&",
     bool multi = false);
+
+struct range_arg {
+    range_arg(): offset(0), size(0), valid(false) {};
+    apr_off_t offset;
+    apr_size_t size;
+    bool valid;
+};
+
+// A structure used to issue a sub-request and return the result, using mod_receive
+// supports range, optional INFLATE the response, retries (for s3)
+struct subr {
+    subr(request_rec *r) : main(r), tries(4), inflate(0) {};
+
+    // Returns APR_SUCCESS or HTTP error code
+    DLL_PUBLIC int fetch(const char *url, storage_manager &dst);
+
+    request_rec* main;
+    range_arg range;
+    int tries;
+    int inflate; // true if inflate filter needs to be injected
+    std::string agent; // input
+    std::string error_message;
+    std::string ETag; // output
+};
 
 //
 // Issues a subrequest to the local path and returns the content and the ETag
