@@ -37,6 +37,10 @@
 #include <algorithm>
 #include <unordered_map>
 
+// Need zlib to ungzip compressed input
+// The apache inflate filter doesn't activate on subrequests, it can't be used
+#include <zlib.h>
+
 NS_AHTSE_START
 
 // Given a data type name, returns a data type
@@ -531,6 +535,34 @@ apr_hash_t *argparse(request_rec *r, const char *raw_args, const char *sep, bool
     return form;
  }
 
+// Mostly copied from mrf_util.cpp:ZUnPack()
+// return true if all is OK
+static int ungzip(const storage_manager& src, storage_manager& dst) {
+    z_stream stream;
+    memset(&stream, 0, sizeof(stream));
+    stream.next_in = reinterpret_cast<Bytef*>(src.buffer);
+    stream.avail_in = static_cast<uInt>(src.size);
+    stream.next_out = reinterpret_cast<Bytef*>(dst.buffer);
+    stream.avail_out = static_cast<uInt>(dst.size);
+
+    // Gzip, max window size
+    if (Z_OK != inflateInit2(&stream, 16 + MAX_WBITS))
+        return false;
+    auto err = inflate(&stream, Z_FINISH);
+
+    // Use dst.size as flag, that buffer was too small
+    if (Z_BUF_ERROR == err)
+        dst.size = -1; 
+
+    if (Z_STREAM_END != err) {
+        inflateEnd(&stream);
+        return false;
+    }
+
+    dst.size = stream.total_out;
+    return Z_OK == inflateEnd(&stream);
+}
+
 int subr::fetch(const char *url, storage_manager& dst) {
     static ap_filter_rec_t* receive_filter = nullptr;
     if (!receive_filter) {
@@ -545,8 +577,9 @@ int subr::fetch(const char *url, storage_manager& dst) {
         srange = apr_psprintf(main->pool, "bytes=%" APR_UINT64_T_FMT "-%" APR_UINT64_T_FMT,
                     range.offset, range.size);
 
+    // Keep this outside of the loop, so we can capture rctx.maxsize
+    receive_ctx rctx;
     do {
-        receive_ctx rctx;
         rctx.buffer = dst.buffer;
         rctx.maxsize = dst.size;
         rctx.size = 0;
@@ -556,7 +589,8 @@ int subr::fetch(const char *url, storage_manager& dst) {
             apr_table_setn(sr->headers_in, "Range", srange);
         if (!agent.empty())
             apr_table_setn(sr->headers_in, "User-Agent", agent.c_str());
-        ap_filter_t* rf = ap_add_output_filter_handle(receive_filter, &rctx, sr, sr->connection);
+        ap_filter_t* rf = 
+            ap_add_output_filter_handle(receive_filter, &rctx, sr, sr->connection);
         int status = ap_run_sub_req(sr);
         int sr_status = sr->status;
         ap_remove_output_filter(rf);
@@ -591,13 +625,45 @@ int subr::fetch(const char *url, storage_manager& dst) {
 
     } while (!failed);
 
+    uint32_t sig = 0;
+    if (!failed && dst.size >= sizeof(sig))
+        memcpy(&sig, dst.buffer, sizeof(sig));
+
+    // This needs to do an in-place unzip
+    if (GZIP_SIG == sig) { // !failed is implicit, so we can return
+        // Try using the reminder of the buffer
+        storage_manager zipdest;
+        zipdest.buffer = dst.buffer + dst.size;
+        zipdest.size = rctx.maxsize - dst.size;
+
+        if (!ungzip(dst, zipdest)) {
+            // Maybe too large, allocate a new buffer, unpack there, then copy data back
+            // the unpacked size still needs to be under the input dest buffer max size
+            if (dst.size < 0) { // Output buffer was too small
+                zipdest.size = rctx.maxsize;
+                zipdest.buffer = reinterpret_cast<char*>(apr_palloc(main->pool, zipdest.size));
+                failed = !ungzip(dst, zipdest);
+                if (failed)
+                    error_message = "Uncompressed output buffer too small";
+            }
+            else { // Some other unzip error
+                error_message = "ungzip error";
+                failed = true;
+            }
+        }
+
+        if (!failed) {
+            memmove(dst.buffer, zipdest.buffer, zipdest.size);
+            dst.size = zipdest.size;
+        }
+    }
+
     return failed ? HTTP_NOT_FOUND : APR_SUCCESS;
 }
 
 // Issues a subrequest and captures the response and the ETag
 int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     char **psETag)
-
 {
     static ap_filter_rec_t *receive_filter = nullptr;
     if (!receive_filter) {
@@ -698,6 +764,28 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
     } while (!failed && rctx.size != dst.size);
 
     return failed ? 0 : rctx.size;
+}
+
+const char* stride_decode(codec_params& params, storage_manager& src, void* buffer)
+{
+    const char* error_message = nullptr;
+    apr_uint32_t sig = 0;
+    memcpy(&sig, src.buffer, sizeof(sig));
+    switch (sig)
+    {
+    case JPEG_SIG:
+        error_message = jpeg_stride_decode(params, src, buffer);
+        break;
+    case PNG_SIG:
+        error_message = png_stride_decode(params, src, buffer);
+        break;
+    case LERC_SIG:
+        error_message = lerc_stride_decode(params, src, buffer);
+        break;
+    default:
+        error_message = "Decode requested for unknown format";
+    }
+    return error_message;
 }
 
 NS_AHTSE_END

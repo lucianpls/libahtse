@@ -10,8 +10,8 @@
 #include "ahtse.h"
 #include "Lerc1Image.h"
 
-NS_AHTSE_USE
 USING_NAMESPACE_LERC1
+NS_AHTSE_START
 
 // Read an unaligned 4 byte little endian int from location p, advances pointer
 static void READ_INT32(uint32_t& X, const char*& p) {
@@ -69,7 +69,7 @@ const char* lerc_encode(lerc_params& params, storage_manager& src, storage_manag
 
 const char* lerc_stride_decode(codec_params& params, storage_manager& src, void* buffer)
 {
-    return nullptr;
+    return "Not yet implemented";
 }
 
 int set_lerc_params(const TiledRaster& raster, lerc_params* params)
@@ -79,3 +79,4 @@ int set_lerc_params(const TiledRaster& raster, lerc_params* params)
     params->dt = raster.datatype;
     return 0;
 }
+NS_AHTSE_END

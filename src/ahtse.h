@@ -84,7 +84,7 @@ NS_AHTSE_START
 #define JPEG_SIG 0xffd8ffe0
 
 // Lerc is only supported on little endian
-// #define LERC_SIG 0x436e745a
+#define LERC_SIG 0x436e745a
 
 // This one is not an image type, but an encoding
 #define GZIP_SIG 0x1f8b0800
@@ -355,6 +355,10 @@ DLL_PUBLIC int sendImage(request_rec *r,
 // Called with an empty tile configuration, send the empty tile with the proper ETag
 // Handles conditional requests
 DLL_PUBLIC int sendEmptyTile(request_rec *r, const empty_conf_t &empty);
+
+// Generic image decode dispatcher, parameters should be already set to what is expected
+// Returns error message or null.
+DLL_PUBLIC const char *stride_decode(codec_params& params, storage_manager& src, void* buffer);
 
 // In JPEG_codec.cpp
 // raster defines the expected tile
