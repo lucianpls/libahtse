@@ -143,7 +143,8 @@ typedef enum {
 //    GDT_TypeCount = 8   // Not a type
 } GDALDataType;
 
-enum img_fmt { IMG_JPEG, IMG_JPEG_ZEN, IMG_PNG };
+// Why are these here?
+// enum img_fmt { IMG_JPEG, IMG_JPEG_ZEN, IMG_PNG };
 
 // Size in bytes
 DLL_PUBLIC int GDTGetSize(GDALDataType dt, int num = 1);
@@ -247,12 +248,23 @@ struct vfile_t {
 // For encoders, see format specific extensions below
 //
 struct codec_params {
+    codec_params() {
+        memset(this, 0, sizeof(codec_params));
+    }
+    codec_params(const TiledRaster& raster) {
+        memset(this, 0, sizeof(codec_params));
+        size = raster.pagesize;
+        dt = raster.datatype;
+        if (raster.has_ndv)
+            ndv = raster.ndv;
+    }
     sz size;
     GDALDataType dt; // data type
     // Line size in bytes for decoding only
     apr_uint32_t line_stride;
     // Set if special data handling took place during decoding (zero mask on JPEG)
     apr_uint32_t modified;
+    double ndv; // Defaults to zero, needed during decode for Lerc1
     // A place for codec error message
     char error_message[1024];
 };
@@ -269,11 +281,10 @@ struct png_params : codec_params {
 
     // If true, NDV is the transparent color
     int has_transparency;
-    // TODO: Have a way to pass the transparent color when has_transparency is on
+    // TODO: Have a way to pass the transparent color when has_transparency is true
 };
 
 struct lerc_params : codec_params {
-    double ndv; // Defaults to 0, MRF style
     float prec; // half of quantization step
 };
 
