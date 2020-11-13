@@ -49,7 +49,6 @@ template<typename T> static void Lerc1ImgFill(Lerc1Image& zImg, T* src, const le
 
 const char* lerc_encode(lerc_params& params, storage_manager& src, storage_manager& dst) {
     Lerc1Image zImg;
-    auto pdst = reinterpret_cast<Lerc1NS::Byte*>(dst.buffer);
 
     switch (params.dt) {
 #define FILL(T) Lerc1ImgFill(zImg, reinterpret_cast<T *>(src.buffer), params)
@@ -63,9 +62,15 @@ const char* lerc_encode(lerc_params& params, storage_manager& src, storage_manag
         return "Unsupported data type for LERC1 encode"; // Error return
     }
 #undef FILL
-    if (!zImg.write(&pdst, params.prec)) {
+    auto buffer = reinterpret_cast<Lerc1NS::Byte*>(dst.buffer);
+    auto pdst = buffer;
+    if (!zImg.write(&pdst, params.prec))
         return "Error during LERC1 compression";
-    }
+    // Write advances the pdst pointer
+    if (pdst - buffer > dst.size)
+        // This is a late check, better than never?
+        return "Output buffer overflow";
+    dst.size = pdst - buffer;
     return nullptr;
 }
 
@@ -159,6 +164,7 @@ int set_lerc_params(const TiledRaster& raster, lerc_params* params) {
     memset(params, 0, sizeof(lerc_params));
     params->size = raster.pagesize;
     params->dt = raster.datatype;
+    params->prec = raster.precision;
     return 0;
 }
 NS_AHTSE_END
