@@ -49,18 +49,28 @@ GDALDataType getDT(const char *name)
     if (name == nullptr) return GDT_Byte;
     if (!apr_strnatcasecmp(name, "UINT16"))
         return GDT_UInt16;
-    else if (!apr_strnatcasecmp(name, "INT16") || !apr_strnatcasecmp(name, "SHORT"))
+    if (!apr_strnatcasecmp(name, "INT16") || !apr_strnatcasecmp(name, "SHORT"))
         return GDT_Int16;
-    else if (!apr_strnatcasecmp(name, "UINT32"))
+    if (!apr_strnatcasecmp(name, "UINT32"))
         return GDT_UInt32;
-    else if (!apr_strnatcasecmp(name, "INT32") || !apr_strnatcasecmp(name, "INT"))
+    if (!apr_strnatcasecmp(name, "INT32") || !apr_strnatcasecmp(name, "INT"))
         return GDT_Int32;
-    else if (!apr_strnatcasecmp(name, "FLOAT32") || !apr_strnatcasecmp(name, "FLOAT"))
+    if (!apr_strnatcasecmp(name, "FLOAT32") || !apr_strnatcasecmp(name, "FLOAT"))
         return GDT_Float32;
-    else if (!apr_strnatcasecmp(name, "FLOAT64") || !apr_strnatcasecmp(name, "DOUBLE"))
+    if (!apr_strnatcasecmp(name, "FLOAT64") || !apr_strnatcasecmp(name, "DOUBLE"))
         return GDT_Float64;
     else
         return GDT_Byte;
+}
+
+IMG_T getFMT(const std::string &sfmt) {
+    if (sfmt == "image/jpeg")
+        return IMG_JPEG_ZEN;
+    if (sfmt == "image/png")
+        return IMG_PNG;
+    if (sfmt == "raster/lerc")
+        return IMG_LERC;
+    return IMG_INVALID;
 }
 
 int GDTGetSize(GDALDataType dt, int n) {
@@ -238,6 +248,22 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
 
     if (nullptr != (line = apr_table_get(kvp, "MaxValue")))
         raster.max = get_value(line, &raster.has_max);
+
+    raster.format = (GDT_Byte == raster.datatype) ? IMG_JPEG_ZEN : IMG_LERC;
+    if (nullptr != (line = apr_table_get(kvp, "Format"))) {
+        raster.format = getFMT(line);
+        if (IMG_INVALID == raster.format)
+            return "invalid format requested";
+    }
+
+    if (IMG_LERC == raster.format) {
+        int user_set = false; // See if it worked
+        if (nullptr != (line = apr_table_get(kvp, "Precision"))) {
+            raster.precision = get_value(line, &user_set);
+        }
+        if (!user_set)
+            raster.precision = raster.datatype < GDT_Float ? 0.5 : 0.01;
+    }
 
     raster.bbox.xmin = raster.bbox.ymin = 0.0;
     raster.bbox.xmax = raster.bbox.ymax = 1.0;

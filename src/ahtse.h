@@ -136,6 +136,7 @@ typedef enum {
     GDT_UInt32 = 4,     // Thirty two bit unsigned integer
     GDT_Int32 = 5,      // Thirty two bit signed integer
     GDT_Int = 5,
+    // Keep the floats at the end
     GDT_Float32 = 6,    // Thirty two bit floating point
     GDT_Float = 6,
     GDT_Float64 = 7,    // Sixty four bit floating point
@@ -143,8 +144,9 @@ typedef enum {
 //    GDT_TypeCount = 8   // Not a type
 } GDALDataType;
 
-// Why are these here?
-// enum img_fmt { IMG_JPEG, IMG_JPEG_ZEN, IMG_PNG };
+enum IMG_T { IMG_JPEG, IMG_JPEG_ZEN, IMG_PNG, IMG_LERC, IMG_INVALID };
+
+DLL_PUBLIC IMG_T getFMT(const std::string&);
 
 // Size in bytes
 DLL_PUBLIC int GDTGetSize(GDALDataType dt, int num = 1);
@@ -209,6 +211,7 @@ struct TiledRaster {
     double ndv, min, max, precision;
     int has_ndv, has_min, has_max;
     int maxtilesize;
+    IMG_T format;
 
     // how many levels from full size, computed
     int n_levels;
