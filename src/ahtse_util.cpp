@@ -65,7 +65,7 @@ GDALDataType getDT(const char *name)
 
 IMG_T getFMT(const std::string &sfmt) {
     if (sfmt == "image/jpeg")
-        return IMG_JPEG_ZEN;
+        return IMG_JPEG;
     if (sfmt == "image/png")
         return IMG_PNG;
     if (sfmt == "raster/lerc")
@@ -204,6 +204,19 @@ static double get_value(const char *s, int *has) {
     return value;
 }
 
+// Consistency checks
+static const char* checkRaster(const TiledRaster& raster) {
+    if (IMG_INVALID == raster.format)
+        return "Invalid format";
+
+    if (IMG_PNG == raster.format) {
+        if (2 < GDTGetSize(raster.datatype))
+            return "Invalid DataType for PNG";
+    }
+
+    return nullptr;
+}
+
 // Initialize a raster structure from a kvp table
 const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster)
 {
@@ -249,12 +262,9 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
     if (nullptr != (line = apr_table_get(kvp, "MaxValue")))
         raster.max = get_value(line, &raster.has_max);
 
-    raster.format = (GDT_Byte == raster.datatype) ? IMG_JPEG_ZEN : IMG_LERC;
-    if (nullptr != (line = apr_table_get(kvp, "Format"))) {
+    raster.format = (GDT_Byte == raster.datatype) ? IMG_ANY : IMG_LERC;
+    if (nullptr != (line = apr_table_get(kvp, "Format")))
         raster.format = getFMT(line);
-        if (IMG_INVALID == raster.format)
-            return "invalid format requested";
-    }
 
     if (IMG_LERC == raster.format) {
         int user_set = false; // See if it worked
@@ -281,7 +291,7 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
 
     init_rsets(pool, raster);
 
-    return nullptr;
+    return checkRaster(raster);
 }
 
 const char *getBBox(const char *line, bbox_t &bbox)

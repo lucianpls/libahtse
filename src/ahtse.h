@@ -144,7 +144,10 @@ typedef enum {
 //    GDT_TypeCount = 8   // Not a type
 } GDALDataType;
 
-enum IMG_T { IMG_JPEG, IMG_JPEG_ZEN, IMG_PNG, IMG_LERC, IMG_INVALID };
+// IMG_ANY is the default, but no checks can be done at config time
+// On input, it decodes to byte, on output it is equivalent to IMG_JPEG
+// JPEG is always JPEG_ZEN
+enum IMG_T { IMG_ANY, IMG_JPEG, IMG_PNG, IMG_LERC, IMG_INVALID };
 
 DLL_PUBLIC IMG_T getFMT(const std::string&);
 
