@@ -640,7 +640,8 @@ int subr::fetch(const char *url, storage_manager& dst) {
         }
 
         // exit condition, got what we need
-        if ((range.valid && rctx.size == range.size) || (!range.valid && HTTP_OK == sr_status)) {
+        if ((range.valid && static_cast<size_t>(rctx.size) == range.size) 
+            || (!range.valid && HTTP_OK == sr_status)) {
             dst.size = rctx.size;
             break;
         }
@@ -662,7 +663,7 @@ int subr::fetch(const char *url, storage_manager& dst) {
     } while (!failed);
 
     uint32_t sig = 0;
-    if (!failed && dst.size >= sizeof(sig))
+    if (!failed && static_cast<size_t>(dst.size) >= sizeof(sig))
         memcpy(&sig, dst.buffer, sizeof(sig));
 
     // This needs to do an in-place unzip
