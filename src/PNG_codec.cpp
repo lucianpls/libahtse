@@ -59,7 +59,6 @@ static void store_data(png_structp pngp, png_bytep data, png_size_t length)
 
 const char *png_stride_decode(codec_params &params, storage_manager &src, void *buffer)
 {
-    char *message = nullptr;
     png_structp pngp = nullptr;
     png_infop infop = nullptr;
     png_uint_32 width, height;
