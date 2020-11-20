@@ -70,7 +70,7 @@ const char* lerc_encode(lerc_params& params, storage_manager& src, storage_manag
     if (pdst - buffer > dst.size)
         // This is a late check, better than never?
         return "Output buffer overflow";
-    dst.size = pdst - buffer;
+    dst.size = static_cast<int>(pdst - buffer);
     return nullptr;
 }
 
@@ -164,7 +164,7 @@ int set_lerc_params(const TiledRaster& raster, lerc_params* params) {
     memset(params, 0, sizeof(lerc_params));
     params->size = raster.pagesize;
     params->dt = raster.datatype;
-    params->prec = raster.precision;
+    params->prec = static_cast<float>(raster.precision);
     return 0;
 }
 NS_AHTSE_END
