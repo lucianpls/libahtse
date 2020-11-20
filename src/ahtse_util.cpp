@@ -698,6 +698,14 @@ int subr::fetch(const char *url, storage_manager& dst) {
     return failed ? HTTP_NOT_FOUND : APR_SUCCESS;
 }
 
+DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, sz tile, const char* suffix) {
+    return apr_pstrcat(p, src,
+        apr_psprintf(p, tile.z ? "%d/%d/%d/%d" : "%d/%d/%d",
+            static_cast<int>(tile.z), static_cast<int>(tile.l), 
+            static_cast<int>(tile.y), static_cast<int>(tile.x)),
+        suffix, nullptr);
+}
+
 // Issues a subrequest and captures the response and the ETag
 int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     char **psETag)
