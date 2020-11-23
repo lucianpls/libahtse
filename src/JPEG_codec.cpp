@@ -84,8 +84,7 @@ const char *jpeg_stride_decode(codec_params &params, storage_manager &src, void 
     case 12:
         return jpeg12_stride_decode(params, src, buffer);
     }
-    sprintf(params.error_message, 
-        "Input error, not recognized as JPEG");
+    strcpy(params.error_message, "Input error, not recognized as JPEG");
     return params.error_message;
 }
 
@@ -100,7 +99,7 @@ const char *jpeg_encode(jpeg_params &params, storage_manager &src, storage_manag
         message = jpeg12_encode(params, src, dst);
         break;
     default:
-        sprintf(params.error_message,
+        strcpy(params.error_message,
             "Usage error, only 8 and 12 bit input can be encoded as JPEG");
         message = params.error_message;
     }
@@ -110,7 +109,7 @@ const char *jpeg_encode(jpeg_params &params, storage_manager &src, storage_manag
     memcpy(params.error_message, message, std::min<size_t>(sizeof(params.error_message) - 1, strlen(message)));
     if (std::string::npos != std::string(message).find("Write to EMS")) {
         // Convert weird message to the actual reason
-        sprintf(params.error_message, "Write buffer too small");
+        strcpy(params.error_message, "Write buffer too small");
         message = params.error_message;
     }
     return message;
