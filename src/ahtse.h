@@ -11,6 +11,8 @@
 
 #include <apr.h>
 #include <httpd.h>
+// The log is not necessary when compiling, only used for macros
+// #include <http_log.h>
 #include <http_config.h>
 #include <cstdlib>
 #include <cmath>
@@ -36,9 +38,14 @@ NS_AHTSE_START
 #define LOG(r, msg, ...) {\
     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, msg, ##__VA_ARGS__);\
 }
+#define LOGNOTE(r, msg, ...) {\
+    ap_log_rerror(APLOG_MARK, APLOG_NOTICE, 0, r, msg, ##__VA_ARGS__);\
+}
 #else
-#define LOG()
+#define LOG(...)
+#define LOGNOTE(...)
 #endif
+
 //
 // Define DLL_PUBLIC to make a symbol visible
 // Define DLL_LOCAL to hide a symbol
@@ -264,8 +271,12 @@ struct codec_params {
         if (raster.has_ndv)
             ndv = raster.ndv;
     }
+    DLL_PUBLIC size_t min_buffer_size() const {
+        return size.x * size.y * GDTGetSize(dt);
+    }
     sz size;
     GDALDataType dt; // data type
+    IMG_T format;    // output from decode
     // Line size in bytes for decoding only
     apr_uint32_t line_stride;
     // Set if special data handling took place during decoding (zero mask on JPEG)

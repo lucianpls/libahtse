@@ -816,16 +816,20 @@ const char* stride_decode(codec_params& params, storage_manager& src, void* buff
     const char* error_message = nullptr;
     apr_uint32_t sig = 0;
     memcpy(&sig, src.buffer, sizeof(sig));
+    params.format = IMG_INVALID;
     switch (sig)
     {
     case JPEG_SIG:
         error_message = jpeg_stride_decode(params, src, buffer);
+        params.format = IMG_JPEG;
         break;
     case PNG_SIG:
         error_message = png_stride_decode(params, src, buffer);
+        params.format = IMG_PNG;
         break;
     case LERC_SIG:
         error_message = lerc_stride_decode(params, src, buffer);
+        params.format = IMG_LERC;
         break;
     default:
         error_message = "Decode requested for unknown format";
