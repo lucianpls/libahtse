@@ -24,6 +24,7 @@
 #include <http_request.h>
 #include <apr_strings.h>
 #include <ap_regex.h>
+#include <http_log.h>
 
 // strod
 #include <cstdlib>
@@ -599,6 +600,24 @@ static int ungzip(const storage_manager& src, storage_manager& dst) {
     return Z_OK == inflateEnd(&stream);
 }
 
+// DEBUG, log headers in debug mode, call with 
+// apr_table_do(phdr, r, header_table, NULL)
+//
+//static int phdr(void *rec, const char *key, const char *value) {
+//    request_rec* r = (request_rec*)rec;
+//    ap_log_rerror(__FILE__, __LINE__, APLOG_NO_MODULE, APLOG_DEBUG, 0, r, "%s=%s", key, value);
+//    return 1;
+//}
+//
+
+// Remove the quotes, keep just the value
+static void cleanTag(std::string& tag) {
+    if ('"' == *tag.begin())
+        tag.erase(0, 1);
+    if ('"' == *tag.rbegin())
+        tag.erase(tag.end() - 1);
+}
+
 int subr::fetch(const char *url, storage_manager& dst) {
     static ap_filter_rec_t* receive_filter = nullptr;
     if (!receive_filter) {
@@ -615,6 +634,9 @@ int subr::fetch(const char *url, storage_manager& dst) {
 
     // Keep this outside of the loop, so we can capture rctx.maxsize
     receive_ctx rctx;
+    // For Etag capture
+    uint64_t evalue = 0;
+    int missing = 0;
     do {
         rctx.buffer = dst.buffer;
         rctx.maxsize = dst.size;
@@ -629,9 +651,13 @@ int subr::fetch(const char *url, storage_manager& dst) {
             ap_add_output_filter_handle(receive_filter, &rctx, sr, sr->connection);
         int status = ap_run_sub_req(sr);
         int sr_status = sr->status;
+
+        // input ETag, if any, before destroying subrequest
+        const char *intag = apr_table_get(sr->headers_out, "ETag");
+        if (intag)
+            evalue = base32decode(intag, &missing);
+
         ap_remove_output_filter(rf);
-        // capture the tag, if any
-        ETag = apr_table_get(sr->headers_out, "ETag");
         ap_destroy_sub_req(sr);
 
         if (APR_SUCCESS != status) {
@@ -661,6 +687,18 @@ int subr::fetch(const char *url, storage_manager& dst) {
         }
 
     } while (!failed);
+
+    // Build an etag from raw content, if it's large enough
+    if (!evalue && dst.size > 128) {
+        evalue = *(reinterpret_cast<uint64_t*>(dst.buffer) + 4);
+        evalue |= *(reinterpret_cast<uint64_t*>(dst.buffer) + dst.size / 8 - 4);
+        evalue ^= *(reinterpret_cast<uint64_t*>(dst.buffer) + dst.size / 8 - 6);
+    }
+
+
+    char etagsrc[14] = { 0 };
+    tobase32(evalue, etagsrc, missing);
+    ETag = etagsrc;
 
     uint32_t sig = 0;
     if (!failed && static_cast<size_t>(dst.size) >= sizeof(sig))
@@ -699,7 +737,10 @@ int subr::fetch(const char *url, storage_manager& dst) {
 }
 
 DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, sz tile, const char* suffix) {
-    return apr_pstrcat(p, src,
+    if (!src || !strlen(src))
+        return nullptr; // Error
+    const char* slash = src[strlen(src)-1] == '/' ? "" : "/";
+    return apr_pstrcat(p, src, slash,
         apr_psprintf(p, tile.z ? "%d/%d/%d/%d" : "%d/%d/%d",
             static_cast<int>(tile.z), static_cast<int>(tile.l), 
             static_cast<int>(tile.y), static_cast<int>(tile.x)),

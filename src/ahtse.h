@@ -445,18 +445,17 @@ struct range_arg {
 // A structure used to issue a sub-request and return the result, using mod_receive
 // supports range, optional INFLATE the response, retries (for s3)
 struct subr {
-    subr(request_rec *r) : main(r), tries(4), inflate(0) {};
+    subr(request_rec *r) : main(r), tries(4) {};
 
     // Returns APR_SUCCESS or HTTP error code
     DLL_PUBLIC int fetch(const char *url, storage_manager &dst);
 
-    request_rec* main;
-    range_arg range;
-    int tries;
-    int inflate; // true if inflate filter needs to be injected
     std::string agent; // input
     std::string error_message;
     std::string ETag; // output
+    request_rec* main;
+    range_arg range;
+    int tries;
 };
 
 // Builds a MLRC URL to fetch a tile
