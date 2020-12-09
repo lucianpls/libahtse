@@ -611,12 +611,12 @@ static int ungzip(const storage_manager& src, storage_manager& dst) {
 //
 
 // Remove the quotes, keep just the value
-static void cleanTag(std::string& tag) {
-    if ('"' == *tag.begin())
-        tag.erase(0, 1);
-    if ('"' == *tag.rbegin())
-        tag.erase(tag.end() - 1);
-}
+//static void cleanTag(std::string& tag) {
+//    if ('"' == *tag.begin())
+//        tag.erase(0, 1);
+//    if ('"' == *tag.rbegin())
+//        tag.erase(tag.end() - 1);
+//}
 
 int subr::fetch(const char *url, storage_manager& dst) {
     static ap_filter_rec_t* receive_filter = nullptr;
@@ -831,15 +831,15 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
         ap_remove_output_filter(rf);
         ap_destroy_sub_req(sr);
 
-        if (status != APR_SUCCESS)
-            failed = true;
-        else {
+        failed = !(APR_SUCCESS == status);
+        if (!failed) {
             switch (sr_status) {
             case HTTP_PARTIAL_CONTENT:
                 if (0 == tries--) {
                     *msg = "Retries exhausted";
                     failed = true;
                 }
+            // TODO follow redirects
             case HTTP_OK:
                 break;
             default: // Any other return code is unrecoverable
