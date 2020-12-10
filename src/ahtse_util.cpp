@@ -745,7 +745,7 @@ DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, sz tile, const char* s
     }
 
     return apr_pstrcat(p, src, slash,
-        tile.z ? apr_psprintf(p, "%d/", tile.z) : "",
+        tile.z ? apr_psprintf(p, "%d/", static_cast<int>(tile.z)) : "",
         apr_psprintf(p, "%d/%d/%d", static_cast<int>(tile.l), 
             static_cast<int>(tile.y), static_cast<int>(tile.x)),
         suffix, nullptr);
