@@ -740,9 +740,13 @@ DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, sz tile, const char* s
     if (!src || !strlen(src))
         return nullptr; // Error
     const char* slash = src[strlen(src)-1] == '/' ? "" : "/";
+    if (tile.z) {
+
+    }
+
     return apr_pstrcat(p, src, slash,
-        apr_psprintf(p, tile.z ? "%d/%d/%d/%d" : "%d/%d/%d",
-            static_cast<int>(tile.z), static_cast<int>(tile.l), 
+        tile.z ? apr_psprintf(p, "%d/", tile.z) : "",
+        apr_psprintf(p, "%d/%d/%d", static_cast<int>(tile.l), 
             static_cast<int>(tile.y), static_cast<int>(tile.x)),
         suffix, nullptr);
 }
