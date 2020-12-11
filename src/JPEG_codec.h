@@ -3,7 +3,7 @@
 *
 * Shared code for AHTSE JPEG codec
 *
-* (C) Lucian Plesea 2019
+* (C) Lucian Plesea 2019-2020
 */
 
 #if !defined(JPEG_CODEC_H)
@@ -16,7 +16,7 @@
 NS_AHTSE_START
 
 // Could be used for short int, so make it a template
-template<typename T> int apply_mask(BitMap2D<> *bm, T *ps, int nc = 3, int line_stride = 0) {
+template<typename T> static int apply_mask(BitMap2D<> *bm, T *ps, int nc = 3, int line_stride = 0) {
     int w = bm->getWidth();
     int h = bm->getHeight();
 
@@ -52,21 +52,11 @@ template<typename T> int apply_mask(BitMap2D<> *bm, T *ps, int nc = 3, int line_
     return count;
 }
 
-DLL_LOCAL const char *jpeg8_stride_decode(codec_params &params, const TiledRaster &raster,
-    storage_manager &src,
-    void *buffer);
+DLL_LOCAL const char *jpeg8_stride_decode(codec_params &params, storage_manager &src, void *buffer);
+DLL_LOCAL const char *jpeg8_encode(jpeg_params &params, storage_manager &src, storage_manager &dst);
 
-DLL_LOCAL const char *jpeg8_encode(jpeg_params &params, const TiledRaster &raster,
-    storage_manager &src,
-    storage_manager &dst);
-
-DLL_LOCAL const char *jpeg12_stride_decode(codec_params &params, const TiledRaster &raster,
-    storage_manager &src,
-    void *buffer);
-
-DLL_LOCAL const char *jpeg12_encode(jpeg_params &params, const TiledRaster &raster,
-    storage_manager &src,
-    storage_manager &dst);
+DLL_LOCAL const char *jpeg12_stride_decode(codec_params &params, storage_manager &src, void *buffer);
+DLL_LOCAL const char *jpeg12_encode(jpeg_params &params, storage_manager &src, storage_manager &dst);
 
 NS_AHTSE_END
 

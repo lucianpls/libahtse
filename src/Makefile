@@ -1,7 +1,7 @@
 MODULE = libahtse
 TARGET = .libs/$(MODULE).so
 
-C_SRC = ahtse_util.cpp JPEG_codec.cpp PNG_codec.cpp Packer_RLE.cpp JPEG8.cpp JPEG12.cpp
+C_SRC = ahtse_util.cpp JPEG_codec.cpp PNG_codec.cpp Packer_RLE.cpp JPEG8.cpp JPEG12.cpp LERC_codec.cpp Lerc1Image.cpp
 HEADERS = ahtse.h BitMask2D.h
 
 OBJECTS = $(C_SRC:.cpp=.lo) libjpeg12.a

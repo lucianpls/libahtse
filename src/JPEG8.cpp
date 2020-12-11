@@ -136,16 +136,14 @@ static boolean zenChunkHandler(j_decompress_ptr cinfo) {
 // A non-zero params.modified on return means that there was a Zen chunk that had an effect
 //
 
-const char *jpeg8_stride_decode(codec_params &params, const TiledRaster &raster,
-    storage_manager &src,
-    void *buffer)
+const char *jpeg8_stride_decode(codec_params &params, storage_manager &src, void *buffer)
 {
     JSAMPLE *rp[2]; // Two lines at a time
     static_assert(sizeof(params.error_message) >= JMSG_LENGTH_MAX,
         "Message buffer too small");
     params.error_message[0] = 0; // Clear errors
 
-    if (GDTGetSize(raster.datatype) != 1) {
+    if (GDTGetSize(params.dt) != GDT_Byte) {
         sprintf(params.error_message, "JPEG8 decode called with wrong datatype");
         return params.error_message;
     }
@@ -184,7 +182,7 @@ const char *jpeg8_stride_decode(codec_params &params, const TiledRaster &raster,
     jpeg_read_header(&cinfo, TRUE);
     cinfo.dct_method = JDCT_FLOAT;
 
-    if (!(raster.pagesize.c == 1 || raster.pagesize.c == 3))
+    if (!(params.size.c == 1 || params.size.c == 3))
         sprintf(params.error_message, "JPEG with wrong number of components");
 
     if (jpeg_has_multiple_scans(&cinfo) || cinfo.arith_code)
@@ -193,18 +191,22 @@ const char *jpeg8_stride_decode(codec_params &params, const TiledRaster &raster,
     if (cinfo.data_precision != 8)
         sprintf(params.error_message, "JPEG with more than 8 bits of data");
 
-    if (cinfo.image_width != raster.pagesize.x || cinfo.image_height != raster.pagesize.y)
+    if (cinfo.image_width != params.size.x || cinfo.image_height != params.size.y)
         sprintf(params.error_message, "Wrong JPEG size on input");
+
+    apr_int64_t line_stride = params.line_stride;
+    if (0 == line_stride)
+        line_stride = params.size.c * params.size.x;
 
     // Only if the error message hasn't been set already
     if (params.error_message[0] == 0) {
         // Force output to desired number of channels
-        cinfo.out_color_space = (raster.pagesize.c == 3) ? JCS_RGB : JCS_GRAYSCALE;
+        cinfo.out_color_space = (params.size.c == 3) ? JCS_RGB : JCS_GRAYSCALE;
         jpeg_start_decompress(&cinfo);
         while (cinfo.output_scanline < cinfo.image_height) {
             // Do the math in bytes, because line_stride is in bytes
-            rp[0] = (JSAMPROW)((char *)buffer + params.line_stride * cinfo.output_scanline);
-            rp[1] = (JSAMPROW)((char *)buffer + params.line_stride * (cinfo.output_scanline + 1));
+            rp[0] = (JSAMPROW)((char *)buffer + line_stride * cinfo.output_scanline);
+            rp[1] = rp[0] + line_stride;
             jpeg_read_scanlines(&cinfo, JSAMPARRAY(rp), 2);
         }
 
@@ -223,8 +225,8 @@ const char *jpeg8_stride_decode(codec_params &params, const TiledRaster &raster,
     if (nullptr != jh.zenChunk.buffer) {
         // Mask defaults to full
         BitMap2D<> bm(
-            static_cast<unsigned int>(raster.pagesize.x),
-            static_cast<unsigned int>(raster.pagesize.y));
+            static_cast<unsigned int>(params.size.x),
+            static_cast<unsigned int>(params.size.y));
 
         // A zero size zen chunk means all pixels are not black, matching the full mask
         if (jh.zenChunk.size != 0) { // Read the mask from the chunk only for partial masks
@@ -238,7 +240,7 @@ const char *jpeg8_stride_decode(codec_params &params, const TiledRaster &raster,
 
         params.modified = apply_mask(&bm,
             reinterpret_cast<JSAMPROW>(buffer),
-            static_cast<int>(raster.pagesize.c),
+            static_cast<int>(params.size.c),
             static_cast<int>(params.line_stride));
     }
 
@@ -246,8 +248,7 @@ const char *jpeg8_stride_decode(codec_params &params, const TiledRaster &raster,
 }
 
 // TODO: Write a Zen chunk if provided in the parameters
-const char *jpeg8_encode(jpeg_params &params, const TiledRaster &raster, storage_manager &src,
-    storage_manager &dst)
+const char *jpeg8_encode(jpeg_params &params, storage_manager &src, storage_manager &dst)
 {
     struct jpeg_compress_struct cinfo;
     jpeg_error_mgr err;
@@ -279,10 +280,10 @@ const char *jpeg8_encode(jpeg_params &params, const TiledRaster &raster, storage
 
     jpeg_create_compress(&cinfo);
     cinfo.dest = &mgr;
-    cinfo.image_width = static_cast<JDIMENSION>(raster.pagesize.x);
-    cinfo.image_height = static_cast<JDIMENSION>(raster.pagesize.y);
-    cinfo.input_components = static_cast<int>(raster.pagesize.c);
-    cinfo.in_color_space = (raster.pagesize.c == 3) ? JCS_RGB : JCS_GRAYSCALE;
+    cinfo.image_width = static_cast<JDIMENSION>(params.size.x);
+    cinfo.image_height = static_cast<JDIMENSION>(params.size.y);
+    cinfo.input_components = static_cast<int>(params.size.c);
+    cinfo.in_color_space = (params.size.c == 3) ? JCS_RGB : JCS_GRAYSCALE;
 
     jpeg_set_defaults(&cinfo);
 
@@ -298,7 +299,6 @@ const char *jpeg8_encode(jpeg_params &params, const TiledRaster &raster, storage
         jpeg_write_scanlines(&cinfo, JSAMPARRAY(rp), 2);
     }
     jpeg_finish_compress(&cinfo);
-
     jpeg_destroy_compress(&cinfo);
     dst.size -= static_cast<int>(mgr.free_in_buffer);
 

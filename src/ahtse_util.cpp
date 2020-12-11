@@ -8,7 +8,7 @@
 * The alternative used is to return strings containing the error message, leaving the 
 * called decide if logging is necessary
 *
-* (C) Lucian Plesea 2019
+* (C) Lucian Plesea 2019-2020
 *
 */
 
@@ -24,6 +24,7 @@
 #include <http_request.h>
 #include <apr_strings.h>
 #include <ap_regex.h>
+#include <http_log.h>
 
 // strod
 #include <cstdlib>
@@ -32,9 +33,14 @@
 // setlocale
 #include <clocale>
 #include <cstring>
+#include <string>
 
 #include <algorithm>
 #include <unordered_map>
+
+// Need zlib to ungzip compressed input
+// The apache inflate filter doesn't activate on subrequests, it can't be used
+#include <zlib.h>
 
 NS_AHTSE_START
 
@@ -44,18 +50,28 @@ GDALDataType getDT(const char *name)
     if (name == nullptr) return GDT_Byte;
     if (!apr_strnatcasecmp(name, "UINT16"))
         return GDT_UInt16;
-    else if (!apr_strnatcasecmp(name, "INT16") || !apr_strnatcasecmp(name, "SHORT"))
+    if (!apr_strnatcasecmp(name, "INT16") || !apr_strnatcasecmp(name, "SHORT"))
         return GDT_Int16;
-    else if (!apr_strnatcasecmp(name, "UINT32"))
+    if (!apr_strnatcasecmp(name, "UINT32"))
         return GDT_UInt32;
-    else if (!apr_strnatcasecmp(name, "INT32") || !apr_strnatcasecmp(name, "INT"))
+    if (!apr_strnatcasecmp(name, "INT32") || !apr_strnatcasecmp(name, "INT"))
         return GDT_Int32;
-    else if (!apr_strnatcasecmp(name, "FLOAT32") || !apr_strnatcasecmp(name, "FLOAT"))
+    if (!apr_strnatcasecmp(name, "FLOAT32") || !apr_strnatcasecmp(name, "FLOAT"))
         return GDT_Float32;
-    else if (!apr_strnatcasecmp(name, "FLOAT64") || !apr_strnatcasecmp(name, "DOUBLE"))
+    if (!apr_strnatcasecmp(name, "FLOAT64") || !apr_strnatcasecmp(name, "DOUBLE"))
         return GDT_Float64;
     else
         return GDT_Byte;
+}
+
+IMG_T getFMT(const std::string &sfmt) {
+    if (sfmt == "image/jpeg")
+        return IMG_JPEG;
+    if (sfmt == "image/png")
+        return IMG_PNG;
+    if (sfmt == "raster/lerc")
+        return IMG_LERC;
+    return IMG_INVALID;
 }
 
 int GDTGetSize(GDALDataType dt, int n) {
@@ -189,6 +205,19 @@ static double get_value(const char *s, int *has) {
     return value;
 }
 
+// Consistency checks
+static const char* checkRaster(const TiledRaster& raster) {
+    if (IMG_INVALID == raster.format)
+        return "Invalid format";
+
+    if (IMG_PNG == raster.format) {
+        if (2 < GDTGetSize(raster.datatype))
+            return "Invalid DataType for PNG";
+    }
+
+    return nullptr;
+}
+
 // Initialize a raster structure from a kvp table
 const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster)
 {
@@ -222,8 +251,8 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
     if (nullptr != (line = apr_table_get(kvp, "SkippedLevels")))
         raster.skip = int(apr_atoi64(line));
 
-    if (nullptr != (line = apr_table_get(kvp, "Projection")))
-        raster.projection = line ? apr_pstrdup(pool, line) : "WM";
+    line = apr_table_get(kvp, "Projection");
+    raster.projection = line ? apr_pstrdup(pool, line) : "SELF";
 
     if (nullptr != (line = apr_table_get(kvp, "NoDataValue")))
         raster.ndv = get_value(line, &raster.has_ndv);
@@ -233,6 +262,19 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
 
     if (nullptr != (line = apr_table_get(kvp, "MaxValue")))
         raster.max = get_value(line, &raster.has_max);
+
+    raster.format = (GDT_Byte == raster.datatype) ? IMG_ANY : IMG_LERC;
+    if (nullptr != (line = apr_table_get(kvp, "Format")))
+        raster.format = getFMT(line);
+
+    if (IMG_LERC == raster.format) {
+        int user_set = false; // See if it worked
+        if (nullptr != (line = apr_table_get(kvp, "Precision"))) {
+            raster.precision = get_value(line, &user_set);
+        }
+        if (!user_set)
+            raster.precision = raster.datatype < GDT_Float ? 0.5 : 0.01;
+    }
 
     raster.bbox.xmin = raster.bbox.ymin = 0.0;
     raster.bbox.xmax = raster.bbox.ymax = 1.0;
@@ -250,7 +292,7 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
 
     init_rsets(pool, raster);
 
-    return nullptr;
+    return checkRaster(raster);
 }
 
 const char *getBBox(const char *line, bbox_t &bbox)
@@ -530,11 +572,184 @@ apr_hash_t *argparse(request_rec *r, const char *raw_args, const char *sep, bool
     return form;
  }
 
+// Mostly copied from mrf_util.cpp:ZUnPack()
+// return true if all is OK
+static int ungzip(const storage_manager& src, storage_manager& dst) {
+    z_stream stream;
+    memset(&stream, 0, sizeof(stream));
+    stream.next_in = reinterpret_cast<Bytef*>(src.buffer);
+    stream.avail_in = static_cast<uInt>(src.size);
+    stream.next_out = reinterpret_cast<Bytef*>(dst.buffer);
+    stream.avail_out = static_cast<uInt>(dst.size);
+
+    // Gzip, max window size
+    if (Z_OK != inflateInit2(&stream, 16 + MAX_WBITS))
+        return false;
+    auto err = inflate(&stream, Z_FINISH);
+
+    // Use dst.size as flag, that buffer was too small
+    if (Z_BUF_ERROR == err)
+        dst.size = -1; 
+
+    if (Z_STREAM_END != err) {
+        inflateEnd(&stream);
+        return false;
+    }
+
+    dst.size = stream.total_out;
+    return Z_OK == inflateEnd(&stream);
+}
+
+// DEBUG, log headers in debug mode, call with 
+// apr_table_do(phdr, r, header_table, NULL)
+//
+//static int phdr(void *rec, const char *key, const char *value) {
+//    request_rec* r = (request_rec*)rec;
+//    ap_log_rerror(__FILE__, __LINE__, APLOG_NO_MODULE, APLOG_DEBUG, 0, r, "%s=%s", key, value);
+//    return 1;
+//}
+//
+
+// Remove the quotes, keep just the value
+//static void cleanTag(std::string& tag) {
+//    if ('"' == *tag.begin())
+//        tag.erase(0, 1);
+//    if ('"' == *tag.rbegin())
+//        tag.erase(tag.end() - 1);
+//}
+
+int subr::fetch(const char *url, storage_manager& dst) {
+    static ap_filter_rec_t* receive_filter = nullptr;
+    if (!receive_filter) {
+        receive_filter = ap_get_output_filter_handle("Receive");
+        if (!receive_filter)
+            return HTTP_INTERNAL_SERVER_ERROR; // Receive not found
+    }
+
+    int failed = false;
+    char* srange = nullptr;
+    if (range.valid) 
+        srange = apr_psprintf(main->pool, "bytes=%" APR_UINT64_T_FMT "-%" APR_UINT64_T_FMT,
+                    range.offset, range.size);
+
+    // Keep this outside of the loop, so we can capture rctx.maxsize
+    receive_ctx rctx;
+    // For Etag capture
+    uint64_t evalue = 0;
+    int missing = 0;
+    do {
+        rctx.buffer = dst.buffer;
+        rctx.maxsize = dst.size;
+        rctx.size = 0;
+
+        request_rec* sr = ap_sub_req_lookup_uri(url, main, main->output_filters);
+        if (range.valid)
+            apr_table_setn(sr->headers_in, "Range", srange);
+        if (!agent.empty())
+            apr_table_setn(sr->headers_in, "User-Agent", agent.c_str());
+        ap_filter_t* rf = 
+            ap_add_output_filter_handle(receive_filter, &rctx, sr, sr->connection);
+        int status = ap_run_sub_req(sr);
+        int sr_status = sr->status;
+
+        // input ETag, if any, before destroying subrequest
+        const char *intag = apr_table_get(sr->headers_out, "ETag");
+        if (intag)
+            evalue = base32decode(intag, &missing);
+
+        ap_remove_output_filter(rf);
+        ap_destroy_sub_req(sr);
+
+        if (APR_SUCCESS != status) {
+            failed = true; // the request didn't work!
+            break;
+        }
+
+        // exit condition, got what we need
+        if ((range.valid && static_cast<size_t>(rctx.size) == range.size) 
+            || (!range.valid && HTTP_OK == sr_status)) {
+            dst.size = rctx.size;
+            break;
+        }
+
+        switch (sr_status) {
+        case HTTP_OK:
+            break;
+        case HTTP_PARTIAL_CONTENT: // The only time we retry
+            if (0 == tries--) {
+                error_message = "Retries exhausted";
+                failed = true;
+            }
+            break;
+        default:
+            error_message = apr_psprintf(main->pool, "Remote responds with %d", sr_status);
+            failed = true;
+        }
+
+    } while (!failed);
+
+    // Build an etag from raw content, if it's large enough
+    if (!evalue && dst.size > 128) {
+        evalue = *(reinterpret_cast<uint64_t*>(dst.buffer) + 4);
+        evalue |= *(reinterpret_cast<uint64_t*>(dst.buffer) + dst.size / 8 - 4);
+        evalue ^= *(reinterpret_cast<uint64_t*>(dst.buffer) + dst.size / 8 - 6);
+    }
+
+
+    char etagsrc[14] = { 0 };
+    tobase32(evalue, etagsrc, missing);
+    ETag = etagsrc;
+
+    uint32_t sig = 0;
+    if (!failed && static_cast<size_t>(dst.size) >= sizeof(sig))
+        memcpy(&sig, dst.buffer, sizeof(sig));
+
+    // This needs to do an in-place unzip
+    if (GZIP_SIG == sig) { // !failed is implicit, so we can return
+        // Try using the reminder of the buffer
+        storage_manager zipdest;
+        zipdest.buffer = dst.buffer + dst.size;
+        zipdest.size = rctx.maxsize - dst.size;
+
+        if (!ungzip(dst, zipdest)) {
+            // Maybe too large, allocate a new buffer, unpack there, then copy data back
+            // the unpacked size still needs to be under the input dest buffer max size
+            if (dst.size < 0) { // Output buffer was too small
+                zipdest.size = rctx.maxsize;
+                zipdest.buffer = reinterpret_cast<char*>(apr_palloc(main->pool, zipdest.size));
+                failed = !ungzip(dst, zipdest);
+                if (failed)
+                    error_message = "Uncompressed output buffer too small";
+            }
+            else { // Some other unzip error
+                error_message = "ungzip error";
+                failed = true;
+            }
+        }
+
+        if (!failed) {
+            memmove(dst.buffer, zipdest.buffer, zipdest.size);
+            dst.size = zipdest.size;
+        }
+    }
+
+    return failed ? HTTP_NOT_FOUND : APR_SUCCESS;
+}
+
+DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, sz tile, const char* suffix) {
+    if (!src || !strlen(src))
+        return nullptr; // Error
+    const char* slash = src[strlen(src)-1] == '/' ? "" : "/";
+    return apr_pstrcat(p, src, 
+        tile.z ? apr_psprintf(p, "%s%d/", slash, static_cast<int>(tile.z)) : slash,
+        apr_psprintf(p, "%d/%d/%d", static_cast<int>(tile.l), 
+            static_cast<int>(tile.y), static_cast<int>(tile.x)),
+        suffix, nullptr);
+}
 
 // Issues a subrequest and captures the response and the ETag
 int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     char **psETag)
-
 {
     static ap_filter_rec_t *receive_filter = nullptr;
     if (!receive_filter) {
@@ -616,15 +831,15 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
         ap_remove_output_filter(rf);
         ap_destroy_sub_req(sr);
 
-        if (status != APR_SUCCESS)
-            failed = true;
-        else {
+        failed = !(APR_SUCCESS == status);
+        if (!failed) {
             switch (sr_status) {
             case HTTP_PARTIAL_CONTENT:
                 if (0 == tries--) {
                     *msg = "Retries exhausted";
                     failed = true;
                 }
+            // TODO follow redirects
             case HTTP_OK:
                 break;
             default: // Any other return code is unrecoverable
@@ -635,6 +850,32 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
     } while (!failed && rctx.size != dst.size);
 
     return failed ? 0 : rctx.size;
+}
+
+const char* stride_decode(codec_params& params, storage_manager& src, void* buffer)
+{
+    const char* error_message = nullptr;
+    apr_uint32_t sig = 0;
+    memcpy(&sig, src.buffer, sizeof(sig));
+    params.format = IMG_INVALID;
+    switch (sig)
+    {
+    case JPEG_SIG:
+        error_message = jpeg_stride_decode(params, src, buffer);
+        params.format = IMG_JPEG;
+        break;
+    case PNG_SIG:
+        error_message = png_stride_decode(params, src, buffer);
+        params.format = IMG_PNG;
+        break;
+    case LERC_SIG:
+        error_message = lerc_stride_decode(params, src, buffer);
+        params.format = IMG_LERC;
+        break;
+    default:
+        error_message = "Decode requested for unknown format";
+    }
+    return error_message;
 }
 
 NS_AHTSE_END

@@ -4,7 +4,7 @@
 *
 * This code only handles a basic subset of the PNG capabilities
 *
-* (C)Lucian Plesea 2016-2019
+* (C)Lucian Plesea 2016-2020
 */
 
 #include "ahtse.h"
@@ -57,19 +57,10 @@ static void store_data(png_structp pngp, png_bytep data, png_size_t length)
     dst->size -= static_cast<int>(length);
 }
 
-const char *png_stride_decode(codec_params &params,
-    const TiledRaster &raster,
-    storage_manager &src,
-    void *buffer)
+const char *png_stride_decode(codec_params &params, storage_manager &src, void *buffer)
 {
-    char *message = nullptr;
     png_structp pngp = nullptr;
     png_infop infop = nullptr;
-    std::vector<png_bytep> png_rowp(static_cast<int>(raster.pagesize.y));
-    for (size_t i = 0; i < png_rowp.size(); i++) // line_stride is always in bytes
-        png_rowp[i] = reinterpret_cast<png_bytep>(
-            static_cast<char *>(buffer)+i * params.line_stride);
-
     png_uint_32 width, height;
     int bit_depth, ct;
     pngp = png_create_read_struct(PNG_LIBPNG_VER_STRING, &params, pngEH, pngEH);
@@ -89,14 +80,14 @@ const char *png_stride_decode(codec_params &params,
 
     png_get_IHDR(pngp, infop, &width, &height, &bit_depth, &ct, NULL, NULL, NULL);
 
-    if (static_cast<png_uint_32>(raster.pagesize.y) != height
-        || static_cast<png_uint_32>(raster.pagesize.x) != width) {
+    if (static_cast<png_uint_32>(params.size.y) != height
+        || static_cast<png_uint_32>(params.size.x) != width) {
         strcpy(params.error_message, "Input PNG has the wrong size");
         longjmp(png_jmpbuf(pngp), 1);
     }
 
-    if ((raster.datatype == GDT_Byte && bit_depth != 8) ||
-        ((raster.datatype == GDT_UInt16 || raster.datatype == GDT_Short) && bit_depth != 16)) {
+    if ((params.dt == GDT_Byte && bit_depth != 8) ||
+        ((params.dt == GDT_UInt16 || params.dt == GDT_Short) && bit_depth != 16)) {
         strcpy(params.error_message, "Input PNG has the wrong type");
         longjmp(png_jmpbuf(pngp), 1);
     }
@@ -113,6 +104,15 @@ const char *png_stride_decode(codec_params &params,
     // Call this after using any of the png_set_*
     png_read_update_info(pngp, infop);
 
+    auto line_stride = static_cast<png_size_t>(params.line_stride);
+    if (0 == line_stride)
+        line_stride = png_get_rowbytes(pngp, infop);
+
+    std::vector<png_bytep> png_rowp(static_cast<int>(params.size.y));
+    for (size_t i = 0; i < png_rowp.size(); i++) // line_stride is always in bytes
+        png_rowp[i] = reinterpret_cast<png_bytep>(
+            static_cast<char*>(buffer) + i * line_stride);
+
     png_read_image(pngp, png_rowp.data());
     png_read_end(pngp, infop);
     png_destroy_read_struct(&pngp, &infop, 0);
@@ -120,13 +120,12 @@ const char *png_stride_decode(codec_params &params,
     return nullptr;
 }
 
-const char *png_encode(png_params &params, const TiledRaster &raster, 
-    storage_manager &src, storage_manager &dst)
+const char *png_encode(png_params &params, storage_manager &src, storage_manager &dst)
 {
     png_structp pngp = nullptr;
     png_infop infop = nullptr;
-    png_uint_32 width = static_cast<png_uint_32>(raster.pagesize.x);
-    png_uint_32 height = static_cast<png_uint_32>(raster.pagesize.y);
+    png_uint_32 width = static_cast<png_uint_32>(params.size.x);
+    png_uint_32 height = static_cast<png_uint_32>(params.size.y);
     // Use a vector so it cleans up itself
     std::vector<png_bytep> png_rowp(height);
 
@@ -176,11 +175,13 @@ const char *png_encode(png_params &params, const TiledRaster &raster,
     return nullptr;
 }
 
-int set_def_png_params(const TiledRaster &raster, png_params *params) {
+int set_png_params(const TiledRaster &raster, png_params *params) {
     // Pick some defaults
     // Only handles 8 or 16 bits
     memset(params, 0, sizeof(png_params));
-    params->bit_depth = (raster.datatype == GDT_Byte) ? 8 : 16;
+    params->size = raster.pagesize;
+    params->dt = raster.datatype;
+    params->bit_depth = (params->dt == GDT_Byte) ? 8 : 16;
     params->compression_level = 6;
     params->has_transparency = FALSE;
 

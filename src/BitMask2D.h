@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Esri
+ * Copyright 2016-2020 Esri
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +15,7 @@
  * Purpose: A 2D bitmask, stored as 64bit units, with an RLE encoding.
  * Used for the JPEG-Zen extension
  *
- * Author:  Lucian Plesea 2016
+ * Author:  Lucian Plesea 2016-2020
  */
 
 /*

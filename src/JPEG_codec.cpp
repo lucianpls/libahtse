@@ -75,34 +75,31 @@ static int get_precision(storage_manager &src)
 }
 
 // Dispatcher for 8 or 12 bit jpeg decoder
-const char *jpeg_stride_decode(codec_params &params, 
-    const TiledRaster &raster, storage_manager &src, void *buffer)
+const char *jpeg_stride_decode(codec_params &params, storage_manager &src, void *buffer)
 {
     int precision = get_precision(src);
     switch (precision) {
     case 8:
-        return jpeg8_stride_decode(params, raster, src, buffer);
+        return jpeg8_stride_decode(params, src, buffer);
     case 12:
-        return jpeg12_stride_decode(params, raster, src, buffer);
+        return jpeg12_stride_decode(params, src, buffer);
     }
-    sprintf(params.error_message, 
-        "Input error, not recognized as JPEG");
+    strcpy(params.error_message, "Input error, not recognized as JPEG");
     return params.error_message;
 }
 
-const char *jpeg_encode(jpeg_params &params, 
-    const TiledRaster &raster, storage_manager &src, storage_manager &dst)
+const char *jpeg_encode(jpeg_params &params, storage_manager &src, storage_manager &dst)
 {
     const char* message = nullptr;
-    switch (GDTGetSize(raster.datatype)) {
+    switch (GDTGetSize(params.dt)) {
     case 1:
-        message = jpeg8_encode(params, raster, src, dst);
+        message = jpeg8_encode(params, src, dst);
         break;
     case 2:
-        message = jpeg12_encode(params, raster, src, dst);
+        message = jpeg12_encode(params, src, dst);
         break;
     default:
-        sprintf(params.error_message,
+        strcpy(params.error_message,
             "Usage error, only 8 and 12 bit input can be encoded as JPEG");
         message = params.error_message;
     }
@@ -112,10 +109,17 @@ const char *jpeg_encode(jpeg_params &params,
     memcpy(params.error_message, message, std::min<size_t>(sizeof(params.error_message) - 1, strlen(message)));
     if (std::string::npos != std::string(message).find("Write to EMS")) {
         // Convert weird message to the actual reason
-        sprintf(params.error_message, "Write buffer too small");
+        strcpy(params.error_message, "Write buffer too small");
         message = params.error_message;
     }
     return message;
+}
+
+int set_jpeg_params(const TiledRaster& raster, codec_params* params) {
+    memset(params, 0, sizeof(codec_params));
+    params->size = raster.pagesize;
+    params->dt = raster.datatype;
+    return 0;
 }
 
 NS_AHTSE_END

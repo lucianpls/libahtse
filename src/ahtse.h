@@ -3,7 +3,7 @@
 *
 * Public interface to libahtse
 *
-* (C) Lucian Plesea 2019
+* (C) Lucian Plesea 2019-2020
 */
 
 #if !defined(AHTSE_H)
@@ -11,9 +11,12 @@
 
 #include <apr.h>
 #include <httpd.h>
+// The log is not necessary when compiling, only used for macros
+// #include <http_log.h>
 #include <http_config.h>
 #include <cstdlib>
 #include <cmath>
+#include <string>
 
 #define APR_WANT_STRFUNC
 #define APR_WANT_MEMFUNC
@@ -35,9 +38,14 @@ NS_AHTSE_START
 #define LOG(r, msg, ...) {\
     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, msg, ##__VA_ARGS__);\
 }
+#define LOGNOTE(r, msg, ...) {\
+    ap_log_rerror(APLOG_MARK, APLOG_NOTICE, 0, r, msg, ##__VA_ARGS__);\
+}
 #else
-#define LOG()
+#define LOG(...)
+#define LOGNOTE(...)
 #endif
+
 //
 // Define DLL_PUBLIC to make a symbol visible
 // Define DLL_LOCAL to hide a symbol
@@ -83,7 +91,7 @@ NS_AHTSE_START
 #define JPEG_SIG 0xffd8ffe0
 
 // Lerc is only supported on little endian
-// #define LERC_SIG 0x436e745a
+#define LERC_SIG 0x436e745a
 
 // This one is not an image type, but an encoding
 #define GZIP_SIG 0x1f8b0800
@@ -135,6 +143,7 @@ typedef enum {
     GDT_UInt32 = 4,     // Thirty two bit unsigned integer
     GDT_Int32 = 5,      // Thirty two bit signed integer
     GDT_Int = 5,
+    // Keep the floats at the end
     GDT_Float32 = 6,    // Thirty two bit floating point
     GDT_Float = 6,
     GDT_Float64 = 7,    // Sixty four bit floating point
@@ -142,7 +151,12 @@ typedef enum {
 //    GDT_TypeCount = 8   // Not a type
 } GDALDataType;
 
-enum img_fmt { IMG_JPEG, IMG_JPEG_ZEN, IMG_PNG };
+// IMG_ANY is the default, but no checks can be done at config time
+// On input, it decodes to byte, on output it is equivalent to IMG_JPEG
+// JPEG is always JPEG_ZEN
+enum IMG_T { IMG_ANY, IMG_JPEG, IMG_PNG, IMG_LERC, IMG_INVALID };
+
+DLL_PUBLIC IMG_T getFMT(const std::string&);
 
 // Size in bytes
 DLL_PUBLIC int GDTGetSize(GDALDataType dt, int num = 1);
@@ -204,9 +218,10 @@ struct TiledRaster {
     struct sz size, pagesize;
 
     // Generic data values
-    double ndv, min, max;
+    double ndv, min, max, precision;
     int has_ndv, has_min, has_max;
     int maxtilesize;
+    IMG_T format;
 
     // how many levels from full size, computed
     int n_levels;
@@ -246,10 +261,27 @@ struct vfile_t {
 // For encoders, see format specific extensions below
 //
 struct codec_params {
-    // Line size in bytes
+    codec_params() {
+        memset(this, 0, sizeof(codec_params));
+    }
+    codec_params(const TiledRaster& raster) {
+        memset(this, 0, sizeof(codec_params));
+        size = raster.pagesize;
+        dt = raster.datatype;
+        if (raster.has_ndv)
+            ndv = raster.ndv;
+    }
+    DLL_PUBLIC size_t min_buffer_size() const {
+        return size.x * size.y * GDTGetSize(dt);
+    }
+    sz size;
+    GDALDataType dt; // data type
+    IMG_T format;    // output from decode
+    // Line size in bytes for decoding only
     apr_uint32_t line_stride;
     // Set if special data handling took place during decoding (zero mask on JPEG)
     apr_uint32_t modified;
+    double ndv; // Defaults to zero, needed during decode for Lerc1
     // A place for codec error message
     char error_message[1024];
 };
@@ -266,7 +298,11 @@ struct png_params : codec_params {
 
     // If true, NDV is the transparent color
     int has_transparency;
-    // TODO: Have a way to pass the transparent color when has_transparency is on
+    // TODO: Have a way to pass the transparent color when has_transparency is true
+};
+
+struct lerc_params : codec_params {
+    float prec; // half of quantization step
 };
 
 #define READ_RIGHTS APR_FOPEN_READ | APR_FOPEN_BINARY | APR_FOPEN_LARGEFILE
@@ -348,17 +384,20 @@ DLL_PUBLIC int sendImage(request_rec *r,
 // Handles conditional requests
 DLL_PUBLIC int sendEmptyTile(request_rec *r, const empty_conf_t &empty);
 
+// Generic image decode dispatcher, parameters should be already set to what is expected
+// Returns error message or null.
+DLL_PUBLIC const char *stride_decode(codec_params& params, storage_manager& src, void* buffer);
+
 // In JPEG_codec.cpp
 // raster defines the expected tile
 // src contains the input JPEG
 // buffer is the location of the first byte on the first line of decoded data
 // line_stride is the size of a line in buffer (larger or equal to decoded JPEG line)
 // Returns NULL if everything looks fine, or an error message
-DLL_PUBLIC const char *jpeg_stride_decode(codec_params &params, 
-    const TiledRaster &raster, storage_manager &src, void *buffer);
-
-DLL_PUBLIC const char *jpeg_encode(jpeg_params &params, 
-    const TiledRaster &raster, storage_manager &src, storage_manager &dst);
+DLL_PUBLIC const char *jpeg_stride_decode(codec_params &params, storage_manager &src, void *buffer);
+DLL_PUBLIC const char *jpeg_encode(jpeg_params &params, storage_manager &src, storage_manager &dst);
+// Based on the raster configuration, populates a jpeg parameter structure, must call before encode and decode
+DLL_PUBLIC int set_jpeg_params(const TiledRaster& raster, codec_params* params);
 
 // In PNG_codec.cpp
 // raster defines the expected tile
@@ -366,12 +405,17 @@ DLL_PUBLIC const char *jpeg_encode(jpeg_params &params,
 // buffer is the location of the first byte on the first line of decoded data
 // line_stride is the size of a line in buffer (larger or equal to decoded PNG line)
 // Returns NULL if everything looks fine, or an error message
-DLL_PUBLIC const char *png_stride_decode(codec_params &params,
-    const TiledRaster &raster, storage_manager &src, void *buffer);
-DLL_PUBLIC const char *png_encode(png_params &params,
-    const TiledRaster &raster, storage_manager &src, storage_manager &dst);
+DLL_PUBLIC const char *png_stride_decode(codec_params &params, storage_manager &src, void *buffer);
+DLL_PUBLIC const char *png_encode(png_params &params, storage_manager &src, storage_manager &dst);
+// Based on the raster configuration, populates a png parameter structure, must call before encode and decode
+DLL_PUBLIC int set_png_params(const TiledRaster &raster, png_params *params);
+
+// In LERC_codec.cpp
+// line_stride has to be zero, as stride decode is not handled by LERC1
+DLL_PUBLIC const char* lerc_stride_decode(codec_params & params, storage_manager & src, void* buffer);
+DLL_PUBLIC const char* lerc_encode(lerc_params & params, storage_manager & src, storage_manager & dst);
 // Based on the raster configuration, populates a png parameter structure
-DLL_PUBLIC int set_def_png_params(const TiledRaster &raster, png_params *params);
+DLL_PUBLIC int set_lerc_params(const TiledRaster & raster, lerc_params * params);
 
 // Skip the leading white spaces and return true for "On" or "1"
 // otherwise it returns false
@@ -390,6 +434,32 @@ DLL_PUBLIC apr_hash_t *argparse(request_rec *r,
     const char *raw_args = NULL,
     const char *sep = "&",
     bool multi = false);
+
+struct range_arg {
+    range_arg(): offset(0), size(0), valid(false) {};
+    apr_off_t offset;
+    apr_size_t size;
+    bool valid;
+};
+
+// A structure used to issue a sub-request and return the result, using mod_receive
+// supports range, optional INFLATE the response, retries (for s3)
+struct subr {
+    subr(request_rec *r) : main(r), tries(4) {};
+
+    // Returns APR_SUCCESS or HTTP error code
+    DLL_PUBLIC int fetch(const char *url, storage_manager &dst);
+
+    std::string agent; // input
+    std::string error_message;
+    std::string ETag; // output
+    request_rec* main;
+    range_arg range;
+    int tries;
+};
+
+// Builds a MLRC URL to fetch a tile
+DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, sz tile, const char* suffix);
 
 //
 // Issues a subrequest to the local path and returns the content and the ETag
@@ -424,20 +494,30 @@ DLL_PUBLIC int range_read(request_rec *r, const char *url, apr_off_t offset,
  */
 
 // Fetch the request configuration if it exists, otherwise the per_directory one
-template<typename T> T* get_conf(request_rec * const r, const module * const thism) {
+template<typename T> static T* get_conf(request_rec * const r, const module * const thism) {
     T *cfg = (T *)ap_get_module_config(r->request_config, thism);
     if (cfg) return cfg;
     return (T *)ap_get_module_config(r->per_dir_config, thism);
 }
 
+// build an object on pool, suitable for "create_dir_conf"
+template<typename T> static void *pcreate(apr_pool_t* p, char* /* path */) {
+    return apr_pcalloc(p, sizeof(T));
+}
+
 // command function to set the source and suffix fields in an ahtse module configuration
-template<typename T> const char *set_source(cmd_parms *cmd, T *cfg,
+template<typename T> static const char *set_source(cmd_parms *cmd, T *cfg,
     const char *src, const char *suffix)
 {
     cfg->source = apr_pstrdup(cmd->pool, src);
     if (suffix && suffix[0])
         cfg->suffix = apr_pstrdup(cmd->pool, suffix);
     return NULL;
+}
+
+// command function to add a regexp to the configuration
+template<typename T> static const char* set_regexp(cmd_parms* cmd, T* cfg, const char* pattern) {
+    return add_regexp_to_array(cmd->pool, &cfg->arr_rxp, pattern);
 }
 
 NS_AHTSE_END
