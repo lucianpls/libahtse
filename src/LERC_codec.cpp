@@ -135,6 +135,10 @@ const char* lerc_stride_decode(codec_params& params, storage_manager& src, void*
         return "Lerc1 multi-band is not supported";
     if (!checkV1(src.buffer, src.size))
         return "Not a Lerc1 tile";
+
+    // Set default line stride if it wasn't specified explicitly
+    if (0 == params.line_stride)
+        params.line_stride = static_cast<apr_uint32_t>(params.size.x * GDTGetSize(params.dt));
     Lerc1Image zImg;
 
     size_t nRemainingBytes = src.size;
