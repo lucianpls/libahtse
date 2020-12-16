@@ -411,7 +411,6 @@ DLL_PUBLIC const char *png_encode(png_params &params, storage_manager &src, stor
 DLL_PUBLIC int set_png_params(const TiledRaster &raster, png_params *params);
 
 // In LERC_codec.cpp
-// line_stride has to be zero, as stride decode is not handled by LERC1
 DLL_PUBLIC const char* lerc_stride_decode(codec_params & params, storage_manager & src, void* buffer);
 DLL_PUBLIC const char* lerc_encode(lerc_params & params, storage_manager & src, storage_manager & dst);
 // Based on the raster configuration, populates a png parameter structure
