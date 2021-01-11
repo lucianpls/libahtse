@@ -1,8 +1,8 @@
 # libahtse
 
-AHTSE Utily library, C++, to be shared between AHTSE modules
+[AHTSE](https://github.com/lucianpls/AHTSE) library, C++, to be shared between various AHTSE modules
 
-Includes image codecs for JPEG, JPEG12 and PNG  
+Includes image codecs for JPEG, JPEG12, PNG and LERCV1
 The content of jpeg12-6b folder is used to generate a static JPEG library with 12 bit names  
 The 8 bit libjpeg and libpng used are the system ones. This makes it possible to use 
 jpeg-turbo for 8 bit and jpeg12-6b for 12 bit
