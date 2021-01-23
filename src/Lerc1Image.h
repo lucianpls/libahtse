@@ -97,22 +97,6 @@ class Lerc1Image : public TImage<float>
 {
 protected:
 
-    struct InfoFromComputeNumBytes
-    {
-        double maxZError;
-        int numTilesVertCnt;
-        int numTilesHoriCnt;
-        int numBytesCnt;
-        float maxCntInImg;
-        int numTilesVertZ;
-        int numTilesHoriZ;
-        int numBytesZ;
-        float maxZInImg;
-        InfoFromComputeNumBytes() {
-            std::memset(this, 0, sizeof(*this));
-        }
-    };
-
     bool findTiling(double maxZError, int& numTilesVert, int& numTilesHori,
         int& numBytesOpt, float& maxValInImg) const;
 
@@ -136,7 +120,7 @@ protected:
         double maxZErrorInFile, float maxZInImg);
 
     unsigned int computeNumBytesNeededToWrite(double maxZError, bool onlyZPart,
-        InfoFromComputeNumBytes* info) const;
+        struct InfoFromComputeNumBytes* info) const;
 
     std::vector<unsigned int> idataVec;    // temporary buffer, reused in readZTile
     BitMaskV1 mask;

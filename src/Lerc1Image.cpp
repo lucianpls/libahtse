@@ -31,7 +31,7 @@ NAMESPACE_LERC1_START
 
 // max quantized value, 28 bits
 // It is wasting a few bits, because a float has only 24bits of precision
-static const double MAXQ = 0x1000000;
+static const double MAXQ = 0xffffff;
 
 // RLE constants
 static const int MAX_RUN = 32767;
@@ -293,8 +293,23 @@ unsigned int Lerc1Image::computeNumBytesNeededToWriteVoidImage() {
     return sz; // 67
 }
 
+struct InfoFromComputeNumBytes {
+    double maxZError;
+    int numTilesVertCnt;
+    int numTilesHoriCnt;
+    int numBytesCnt;
+    float maxCntInImg;
+    int numTilesVertZ;
+    int numTilesHoriZ;
+    int numBytesZ;
+    float maxZInImg;
+    InfoFromComputeNumBytes() {
+        std::memset(this, 0, sizeof(*this));
+    }
+};
+
 unsigned int Lerc1Image::computeNumBytesNeededToWrite(double maxZError,
-    bool onlyZPart, InfoFromComputeNumBytes* info) const
+    bool onlyZPart, struct InfoFromComputeNumBytes* info) const
 {
     int numBytesOpt;
     unsigned int sz = (unsigned int)sCntZImage.size()
