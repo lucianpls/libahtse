@@ -34,6 +34,7 @@
 
 NS_AHTSE_START
 
+// Logging functions that only work in debug builds
 #if defined(DEBUG) || defined(_DEBUG)
 #define LOG(r, msg, ...) {\
     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, msg, ##__VA_ARGS__);\
@@ -469,7 +470,7 @@ DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, sz tile, const char* s
 DLL_PUBLIC int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     char **psETag = NULL);
 
-// Builds an MLRC uri, suffix optional
+// Builds an MLRC uri, suffix optional, returns "/tile</m>/L/R/C" string
 DLL_PUBLIC char *pMLRC(apr_pool_t *pool, const char *prefix, const sloc_t &tile,
     const char *suffix = NULL);
 

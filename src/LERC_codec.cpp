@@ -43,7 +43,7 @@ template<typename T> static void Lerc1ImgFill(Lerc1Image& zImg, T* src, const le
         for (int col = 0; col < w; col++) {
             auto val = static_cast<float>(*src++);
             zImg(row, col) = val;
-            zImg.mask.Set(row * w + col, !FIsEqual(ndv, val));
+            zImg.SetMask(row, col, !FIsEqual(ndv, val));
         }
 }
 
