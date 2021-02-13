@@ -17,3 +17,54 @@ The _Source is an apache directive, used by any non-source module.  It takes one
 arguments, first one is the internal httpd absolute redirect path, the second one is the 
 postfix, which may include http form parameters.  The set_source template function can 
 be used to parse it, into the configuration _source_ and _postfix_ fields.  
+
+## Webconf content
+
+By convention, configuration files for AHTSE modules use the extension *webconf*. In addition to module specific parameters, there are a number of parameters that are always recognized by the library.
+
+### Size X Y Z C
+Mandatory, the size of the full resolution
+
+### PageSize X Y Z C
+Optional, the size of a tile, defaults to 512 512 1 3
+
+### MaxTileSize N
+Optional, the maximum size of a packed tile, in bytes. Defaults to 4MB
+
+### SkippedLevels N
+Number of levels at the top of the pyramid which are skipped, defaults to 0. Internally, the pyramid is always assumed to be complete, with the top level being level 0 and containing a single tile. Setting this to a higher level resets the external numbering, the external level 0 will be equivalent to the internal level N
+
+### Projection String
+Optional, defaults to SELF. Other useful values are:
+- WM - Web Mercator, aka Spherical Mercator
+- GCS - Global Coordinate System, aka Lat-Lon
+- Mercator - WGS84 Mercator
+
+### NoDataValue V
+The value used to signify missing data.
+
+### MinValue V
+
+### MaxValue V
+
+### DataType
+- Byte, Uint8
+- Short, Short16
+- UInt16
+- Int, Int32
+- UInt32
+- Float, Float32
+- Double, Float64
+If the value is not one of the above, the default value of Byte will be used
+
+### Format
+- image/jpeg
+- image/png
+- raster/lerc
+These are used to force the output format, for ATHSE modules that reformat the data. On input, the format is self-detecting in most cases.
+
+### BoundingBox MinX MinY MaxX MaxY
+Bouding box, in the projection coordinate system. Defaults to 0 0 1 1
+
+### ETagSeed B32VAL
+A 64 bit value as 13 base32 digits. May be used to generate ETag values for every tile.
