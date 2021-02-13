@@ -63,8 +63,8 @@ If the value is not one of the above, the default value of Byte will be used
 - raster/lerc
 These are used to force the output format, for ATHSE modules that reformat the data. On input, the format is self-detecting in most cases.
 
-### BoundingBox MinX MinY MaxX MaxY
-Bouding box, in the projection coordinate system. Defaults to 0 0 1 1
+### BoundingBox MinX,MinY,MaxX,MaxY
+Bouding box, for comma separated floating point values using . as the unit separator, in the projection coordinate system. Defaults to 0,0,1,1
 
 ### ETagSeed B32VAL
 A 64 bit value as 13 base32 digits. May be used to generate ETag values for every tile.
