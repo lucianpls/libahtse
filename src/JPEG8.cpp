@@ -72,7 +72,7 @@ static void init_or_terminate_destination(j_compress_ptr /* cinfo */) {}
 static boolean fill_input_buffer_dec(j_decompress_ptr /* cinfo */) { return TRUE; }
 
 // Called if the buffer provided is too small
-// This can't return false for ever
+// Can't keep returning false, it will get called forever
 static boolean empty_output_buffer(j_compress_ptr cinfo) { 
     // Use EMS write message as a flag
     ERREXIT(cinfo, JERR_EMS_WRITE);

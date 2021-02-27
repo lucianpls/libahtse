@@ -24,7 +24,7 @@ struct JPGHandle {
     // A place to hold a message
     char *message;
     // Pointer to Zen chunk
-    AHTSE::storage_manager zenChunk;
+    storage_manager zenChunk;
 };
 
 static void emitMessage(j_common_ptr cinfo, int msgLevel)
@@ -255,7 +255,6 @@ const char *jpeg12_encode(jpeg_params &params, storage_manager &src, storage_man
     jpeg_error_mgr err;
     JPGHandle jh;
     jpeg_destination_mgr mgr;
-    // linesize is in JSAMPLE units
     int linesize;
     JSAMPLE *rp[2];
 
@@ -301,7 +300,6 @@ const char *jpeg12_encode(jpeg_params &params, storage_manager &src, storage_man
         jpeg_write_scanlines(&cinfo, JSAMPARRAY(rp), 2);
     }
     jpeg_finish_compress(&cinfo);
-
     jpeg_destroy_compress(&cinfo);
     dst.size -= static_cast<int>(mgr.free_in_buffer);
 

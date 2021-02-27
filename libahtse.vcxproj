@@ -51,6 +51,7 @@
     <None Include=".gitignore" />
     <None Include="LICENSE" />
     <None Include="README.md" />
+    <None Include="src\jpeg12-6b\Makefile" />
     <None Include="src\jpeg12-6b\makefile.vc" />
     <None Include="src\Makefile" />
   </ItemGroup>
