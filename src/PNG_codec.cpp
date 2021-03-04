@@ -86,8 +86,8 @@ const char *png_stride_decode(codec_params &params, storage_manager &src, void *
         longjmp(png_jmpbuf(pngp), 1);
     }
 
-    if ((params.dt == GDT_Byte && bit_depth != 8) ||
-        ((params.dt == GDT_UInt16 || params.dt == GDT_Short) && bit_depth != 16)) {
+    if ((params.dt == AHTSE_Byte && bit_depth != 8) ||
+        ((params.dt == AHTSE_UInt16 || params.dt == AHTSE_Int16) && bit_depth != 16)) {
         strcpy(params.error_message, "Input PNG has the wrong type");
         longjmp(png_jmpbuf(pngp), 1);
     }
@@ -181,7 +181,7 @@ int set_png_params(const TiledRaster &raster, png_params *params) {
     memset(params, 0, sizeof(png_params));
     params->size = raster.pagesize;
     params->dt = raster.datatype;
-    params->bit_depth = (params->dt == GDT_Byte) ? 8 : 16;
+    params->bit_depth = (params->dt == AHTSE_Byte) ? 8 : 16;
     params->compression_level = 6;
     params->has_transparency = FALSE;
 

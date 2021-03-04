@@ -52,12 +52,12 @@ const char* lerc_encode(lerc_params& params, storage_manager& src, storage_manag
 
     switch (params.dt) {
 #define FILL(T) Lerc1ImgFill(zImg, reinterpret_cast<T *>(src.buffer), params)
-    case GDT_Byte: FILL(uint8_t); break;
-    case GDT_UInt16: FILL(uint16_t); break;
-    case GDT_Int16: FILL(int16_t); break;
-    case GDT_UInt32: FILL(uint32_t); break;
-    case GDT_Int32: FILL(int32_t); break;
-    case GDT_Float32: FILL(float); break;
+    case AHTSE_Byte: FILL(uint8_t); break;
+    case AHTSE_UInt16: FILL(uint16_t); break;
+    case AHTSE_Int16: FILL(int16_t); break;
+    case AHTSE_UInt32: FILL(uint32_t); break;
+    case AHTSE_Int32: FILL(int32_t); break;
+    case AHTSE_Float32: FILL(float); break;
     default:
         return "Unsupported data type for LERC1 encode"; // Error return
     }
@@ -138,7 +138,7 @@ const char* lerc_stride_decode(codec_params& params, storage_manager& src, void*
 
     // Set default line stride if it wasn't specified explicitly
     if (0 == params.line_stride)
-        params.line_stride = static_cast<apr_uint32_t>(params.size.x * GDTGetSize(params.dt));
+        params.line_stride = static_cast<apr_uint32_t>(params.size.x * getTypeSize(params.dt));
     Lerc1Image zImg;
 
     size_t nRemainingBytes = src.size;
@@ -151,12 +151,12 @@ const char* lerc_stride_decode(codec_params& params, storage_manager& src, void*
     // Got the data and the mask in zImg
 #define UFILL(T) Lerc1ImgUFill(zImg, params, reinterpret_cast<T*>(buffer))
     switch (params.dt) {
-    case GDT_Byte: UFILL(uint8_t); break;
-    case GDT_UInt16: UFILL(uint16_t); break;
-    case GDT_Int16: UFILL(int16_t); break;
-    case GDT_UInt32: UFILL(uint32_t); break;
-    case GDT_Int32: UFILL(int32_t); break;
-    case GDT_Float: UFILL(float); break;
+    case AHTSE_Byte: UFILL(uint8_t); break;
+    case AHTSE_UInt16: UFILL(uint16_t); break;
+    case AHTSE_Int16: UFILL(int16_t); break;
+    case AHTSE_UInt32: UFILL(uint32_t); break;
+    case AHTSE_Int32: UFILL(int32_t); break;
+    case AHTSE_Float: UFILL(float); break;
     default: break;
     }
 #undef UFILL

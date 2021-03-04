@@ -144,7 +144,7 @@ const char *jpeg12_stride_decode(codec_params &params, storage_manager &src, voi
         "Message buffer too small");
     params.error_message[0] = 0; // Clear errors
 
-    if (GDTGetSize(params.dt) != 2) {
+    if (getTypeSize(params.dt) != AHTSE_UInt16) {
         sprintf(params.error_message, "JPEG12 decode called with wrong datatype");
         return params.error_message;
     }

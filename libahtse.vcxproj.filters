@@ -98,6 +98,15 @@
     <ClInclude Include="src\Lerc1Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ahtse_codecs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ahtse_httpd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ahtse_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE">

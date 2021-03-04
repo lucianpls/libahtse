@@ -33,7 +33,6 @@
 // setlocale
 #include <clocale>
 #include <cstring>
-#include <string>
 
 #include <algorithm>
 #include <unordered_map>
@@ -45,23 +44,23 @@
 NS_AHTSE_START
 
 // Given a data type name, returns a data type
-GDALDataType getDT(const char *name)
+AHTSEDataType getDT(const char *name)
 {
-    if (name == nullptr) return GDT_Byte;
+    if (name == nullptr) return AHTSE_Byte;
     if (!apr_strnatcasecmp(name, "UINT16"))
-        return GDT_UInt16;
+        return AHTSE_UInt16;
     if (!apr_strnatcasecmp(name, "INT16") || !apr_strnatcasecmp(name, "SHORT"))
-        return GDT_Int16;
+        return AHTSE_Int16;
     if (!apr_strnatcasecmp(name, "UINT32"))
-        return GDT_UInt32;
+        return AHTSE_UInt32;
     if (!apr_strnatcasecmp(name, "INT32") || !apr_strnatcasecmp(name, "INT"))
-        return GDT_Int32;
+        return AHTSE_Int32;
     if (!apr_strnatcasecmp(name, "FLOAT32") || !apr_strnatcasecmp(name, "FLOAT"))
-        return GDT_Float32;
+        return AHTSE_Float32;
     if (!apr_strnatcasecmp(name, "FLOAT64") || !apr_strnatcasecmp(name, "DOUBLE"))
-        return GDT_Float64;
+        return AHTSE_Float64;
     else
-        return GDT_Byte;
+        return AHTSE_Byte;
 }
 
 IMG_T getFMT(const std::string &sfmt) {
@@ -74,19 +73,18 @@ IMG_T getFMT(const std::string &sfmt) {
     return IMG_INVALID;
 }
 
-int GDTGetSize(GDALDataType dt, int n) {
-    // It is not a multimap, so it doesn't take synonyms
-    static const std::unordered_map<GDALDataType, int> size_by_gdt = {
-        {GDT_Unknown, -1},
-        {GDT_Byte, 1},
-        {GDT_UInt16, 2},
-        {GDT_Int16, 2},
-        {GDT_UInt32, 4},
-        {GDT_Int32, 4},
-        {GDT_Float32, 4},
-        {GDT_Double, 8}
+int getTypeSize(AHTSEDataType dt, int n) {
+    static const std::unordered_map<AHTSEDataType, int> sizes = {
+        {AHTSE_Unknown, -1},
+        {AHTSE_Byte, 1},
+        {AHTSE_UInt16, 2},
+        {AHTSE_Int16, 2},
+        {AHTSE_UInt32, 4},
+        {AHTSE_Int32, 4},
+        {AHTSE_Float32, 4},
+        {AHTSE_Double, 8}
     };
-    return n * ((size_by_gdt.count(dt) == 0) ? -1 : size_by_gdt.at(dt));
+    return n * ((sizes.find(dt) == sizes.end()) ? -1 : sizes.at(dt));
 }
 
 // Returns NULL if it worked as expected, returns a four integer value from 
@@ -211,7 +209,7 @@ static const char* checkRaster(const TiledRaster& raster) {
         return "Invalid format";
 
     if (IMG_PNG == raster.format) {
-        if (2 < GDTGetSize(raster.datatype))
+        if (2 < getTypeSize(raster.datatype))
             return "Invalid DataType for PNG";
     }
 
@@ -263,7 +261,7 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
     if (nullptr != (line = apr_table_get(kvp, "MaxValue")))
         raster.max = get_value(line, &raster.has_max);
 
-    raster.format = (GDT_Byte == raster.datatype) ? IMG_ANY : IMG_LERC;
+    raster.format = (AHTSE_Byte == raster.datatype) ? IMG_ANY : IMG_LERC;
     if (nullptr != (line = apr_table_get(kvp, "Format")))
         raster.format = getFMT(line);
 
@@ -273,7 +271,7 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
             raster.precision = get_value(line, &user_set);
         }
         if (!user_set)
-            raster.precision = raster.datatype < GDT_Float ? 0.5 : 0.01;
+            raster.precision = raster.datatype < AHTSE_Float ? 0.5 : 0.01;
     }
 
     raster.bbox.xmin = raster.bbox.ymin = 0.0;
@@ -330,7 +328,7 @@ static int b32(char ic) {
     return -1;
 }
 
-apr_uint64_t base32decode(const char *is, int *flag) {
+uint64_t base32decode(const char *is, int *flag) {
     apr_int64_t value = 0;
     const unsigned char *s = reinterpret_cast<const unsigned char *>(is);
     while (*s == static_cast<unsigned char>('"'))
@@ -346,7 +344,7 @@ apr_uint64_t base32decode(const char *is, int *flag) {
     return value;
 }
 
-void tobase32(apr_uint64_t value, char *buffer, int b65) {
+void tobase32(uint64_t value, char *buffer, int b65) {
     static char b32digits[] = "0123456789abcdefghijklmnopqrstuv";
     // First char holds the 65th bit, which is stored as if it would be in position 60!
     buffer[0] = b32digits[(((value >> 60) & 0xf) << 1) | (b65 ? 1 : 0)];

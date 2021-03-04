@@ -30,6 +30,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ahtse.h" />
+    <ClInclude Include="src\ahtse_codecs.h" />
+    <ClInclude Include="src\ahtse_common.h" />
+    <ClInclude Include="src\ahtse_httpd.h" />
     <ClInclude Include="src\BitMask2D.h" />
     <ClInclude Include="src\jpeg12-6b\cderror.h" />
     <ClInclude Include="src\jpeg12-6b\jchuff.h" />
@@ -178,8 +181,14 @@ copy /y libjpeg12.lib ..</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>copy /y $(TargetPath) \Apache24\modules
-copy /y $(TargetDir)$(TargetName).lib \Apache24\lib
+
+copy /y $(TargetDir)$(Targetname).lib \Apache24\lib
+
 copy /y $(TargetDir)$(Targetname).pdb \Apache24\lib
+
+copy /y src\ahtse_common.h \Apache24\include
+copy /y src\ahtse_codecs.h \Apache24\include
+copy /y src\ahtse_httpd.h \Apache24\include
 copy /y src\ahtse.h \Apache24\include</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

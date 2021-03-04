@@ -91,7 +91,7 @@ const char *jpeg_stride_decode(codec_params &params, storage_manager &src, void 
 const char *jpeg_encode(jpeg_params &params, storage_manager &src, storage_manager &dst)
 {
     const char* message = nullptr;
-    switch (GDTGetSize(params.dt)) {
+    switch (getTypeSize(params.dt)) {
     case 1:
         message = jpeg8_encode(params, src, dst);
         break;

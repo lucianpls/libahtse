@@ -143,7 +143,7 @@ const char *jpeg8_stride_decode(codec_params &params, storage_manager &src, void
         "Message buffer too small");
     params.error_message[0] = 0; // Clear errors
 
-    if (GDTGetSize(params.dt) != GDT_Byte) {
+    if (getTypeSize(params.dt) != AHTSE_Byte) {
         sprintf(params.error_message, "JPEG8 decode called with wrong datatype");
         return params.error_message;
     }
