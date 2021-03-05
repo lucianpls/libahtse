@@ -12,6 +12,7 @@
 #define AHTSE_COMMON_H
 
 #include <cstdint>
+#include <cstring>
 #include <string>
 
 #define NS_AHTSE_START namespace AHTSE {

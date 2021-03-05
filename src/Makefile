@@ -22,7 +22,7 @@ $(TARGET)	:	$(OBJECTS)
 	$(LIBTOOL) --mode=link g++ -o $(MODULE).la -rpath $(DEST) -module -avoid-version $^ $(LIBS)
 
 %.lo	:	%.cpp
-	$(LIBTOOL) --mode=compile g++ -std=c++0x $(CXXFLAGS) $(DEFINES) $(INCLUDES) -pthread -c -o $@ $< && touch $(@:.lo=.slo)
+	$(LIBTOOL) --mode=compile g++ -std=c++0x $(CXXFLAGS) $(DEFINES) -I . $(INCLUDES) -pthread -c -o $@ $< && touch $(@:.lo=.slo)
 
 libjpeg12.a	:	jpeg12-6b/libjpeg12.a
 	$(CP) $^ $@
@@ -32,7 +32,7 @@ jpeg12-6b/libjpeg12.a	:
 
 install	:	$(TARGET)
 	$(SUDO) $(CP) $^ $(DEST)
-	$(SUDO) $(CP) ahtse.h $(HTTPD_INCLUDES_PATH)
+	$(SUDO) $(CP) $(HEADERS) $(HTTPD_INCLUDES_PATH)
 
 clean	:
 	rm -rf $(TARGET) $(OBJECTS) .libs *.o *.lo *.slo *.la jpeg12-6b/*.o jpeg12-6b/libjpeg12.a

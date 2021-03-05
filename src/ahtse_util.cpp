@@ -41,6 +41,8 @@
 // The apache inflate filter doesn't activate on subrequests, it can't be used
 #include <zlib.h>
 
+using namespace std;
+
 NS_AHTSE_START
 
 // Given a data type name, returns a data type
