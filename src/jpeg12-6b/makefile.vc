@@ -25,7 +25,7 @@ LDLIBS= $(conlibs)
 # Put here the object file name for the correct system-dependent memory
 # manager file.  For NT we suggest jmemnobs.obj, which expects the OS to
 # provide adequate virtual memory.
-SYSDEPMEM= jmemansi.obj
+SYSDEPMEM= jmemnobs.obj
 
 # miscellaneous OS-dependent stuff
 # file deletion command
@@ -56,7 +56,11 @@ SOURCES= $(LIBSOURCES) $(SYSDEPSOURCES)
 
 # files included by source files
 INCLUDES= jchuff.h jdhuff.h jdct.h jerror.h jinclude.h jmemsys.h jmorecfg.h \
-        jpegint.h jpeglib.h jversion.h cdjpeg.h cderror.h transupp.h
+        jpegint.h jpeglib.h jversion.h 
+
+# Only used for utilities
+# cdjpeg.h cderror.h transupp.h
+
 # documentation, test, and support files
 #DOCS= README install.doc usage.doc cjpeg.1 djpeg.1 jpegtran.1 rdjpgcom.1 \
 #        wrjpgcom.1 wizard.doc example.c libjpeg.doc structure.doc \
@@ -156,4 +160,4 @@ jquant1.obj: jquant1.c jinclude.h jconfig.h jpeglib.h jmorecfg.h jpegint.h jerro
 jquant2.obj: jquant2.c jinclude.h jconfig.h jpeglib.h jmorecfg.h jpegint.h jerror.h
 jutils.obj: jutils.c jinclude.h jconfig.h jpeglib.h jmorecfg.h jpegint.h jerror.h
 jmemmgr.obj: jmemmgr.c jinclude.h jconfig.h jpeglib.h jmorecfg.h jpegint.h jerror.h jmemsys.h
-jmemansi.obj: jmemansi.c jinclude.h jconfig.h jpeglib.h jmorecfg.h jpegint.h jerror.h jmemsys.h
+jmemnobs.obj: jmemnobs.c jinclude.h jconfig.h jpeglib.h jmorefcg.h jpegint.h jerror.h jmemsys.h
