@@ -48,13 +48,14 @@ The value used to signify missing data.
 ### MaxValue V
 
 ### DataType
-- Byte, Uint8
+- Byte, UInt8
 - Short, Short16
 - UInt16
 - Int, Int32
 - UInt32
 - Float, Float32
 - Double, Float64
+
 If the value is not one of the above, the default value of Byte will be used
 
 ### Format
@@ -67,4 +68,4 @@ These are used to force the output format, for ATHSE modules that reformat the d
 Bouding box, in a WMS style format. Expects four comma separated floating point values using "." as the unit separator, in the projection coordinate system. Defaults to 0,0,1,1
 
 ### ETagSeed B32VAL
-A 64 bit value as 13 base32 digits. May be used to generate ETag values for every tile.
+A 64 bit value as 13 base32 digits. May be used to seed the ETag tile values
