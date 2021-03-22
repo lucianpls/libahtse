@@ -57,13 +57,13 @@ The value used to signify missing data.
 If the value is not one of the above, the default value of Byte will be used
 
 ### Format
+These are used to force the output format, for ATHSE modules that reformat the data. On input, the format is self-detecting in most cases.  
 - image/jpeg
 - image/png
 - raster/lerc
-These are used to force the output format, for ATHSE modules that reformat the data. On input, the format is self-detecting in most cases.
 
 ### BoundingBox MinX,MinY,MaxX,MaxY
 Bouding box, in a WMS style format. Expects four comma separated floating point values using "." as the unit separator, in the projection coordinate system. Defaults to 0,0,1,1
 
 ### ETagSeed B32VAL
-A 64 bit value as 13 base32 digits. May be used to seed the ETag tile values
+A 64 bit value as 13 base32 digits. May be used to seed the ETag tile values.
