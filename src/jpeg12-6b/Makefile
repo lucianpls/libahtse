@@ -1,39 +1,34 @@
-MODULE = libahtse
-TARGET = $(MODULE).so
+TARGET = libjpeg12.o
 
-C_SRC = ahtse_util.cpp JPEG_codec.cpp PNG_codec.cpp Packer_RLE.cpp JPEG8.cpp JPEG12.cpp LERC_codec.cpp Lerc1Image.cpp
-HEADERS = ahtse.h ahtse_common.h ahtse_codecs.h ahtse_httpd.h BitMask2D.h
+C_SRC = jcapimin.c jcapistd.c jccoefct.c jccolor.c jcdctmgr.c jchuff.c \
+        jcinit.c jcmainct.c jcmarker.c jcmaster.c jcomapi.c jcparam.c \
+        jcphuff.c jcprepct.c jcsample.c jctrans.c jdapimin.c jdapistd.c \
+        jdatadst.c jdatasrc.c jdcoefct.c jdcolor.c jddctmgr.c jdhuff.c \
+        jdinput.c jdmainct.c jdmarker.c jdmaster.c jdmerge.c jdphuff.c \
+        jdpostct.c jdsample.c jdtrans.c jerror.c jfdctflt.c jfdctfst.c \
+        jfdctint.c jidctflt.c jidctfst.c jidctint.c jidctred.c jquant1.c \
+        jquant2.c jutils.c jmemmgr.c jmemnobs.c
 
-OBJECTS = $(C_SRC:.cpp=.o) libjpeg12.o
+HEADERS = cderror.h jchuff.h jconfig.h jdct.h jdhuff.h jerror.h jinclude.h \
+        jmemsys.h jmorecfg.h jpegint.h jpeglib.h jversion.h
+
+OBJECTS = $(C_SRC:.c=.o)
 
 CXXFLAGS = -fPIC -O2 -Wall
 
 DEFINES = -DLINUX -D_REENTRANT -D_GNU_SOURCE $(DEBUG)
 
-LIBS = -ljpeg -lpng -lstdc++
-
 FILES = $(C_SRC) $(HEADERS)
 
-include Makefile.lcl
+include ../Makefile.lcl
 
 default : $(TARGET)
 
 $(TARGET)	:	$(OBJECTS)
-	$(CC) -shared -o $@ $^
+	$(LD) -r $^ -o $@
 
-%.o	:	%.cpp
-	$(CXX) -std=c++0x $(CXXFLAGS) $(DEFINES) -I . $(INCLUDES) -pthread -c $< -o $@
-
-libjpeg12.o	:	jpeg12-6b/libjpeg12.o
-	$(CP) $^ $@
-
-jpeg12-6b/libjpeg12.o	:
-	$(MAKE)	-C jpeg12-6b
-
-install	:	$(TARGET)
-	$(SUDO) $(CP) $^ $(DEST)
-	$(SUDO) $(CP) $(HEADERS) $(HTTPD_INCLUDES_PATH)
+%.o	:	%.c
+	$(CXX) $(CXXFLAGS) $(DEFINES) -I . -c $< -o $@
 
 clean	:
-	$(RM) -rf $(TARGET) $(OBJECTS) *.o 
-	$(MAKE) -C jpeg12-6b clean
+	$(RM) -rf $(OBJECTS) $(TARGET)
