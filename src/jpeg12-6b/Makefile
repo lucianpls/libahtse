@@ -20,7 +20,7 @@ DEFINES = -DLINUX -D_REENTRANT -D_GNU_SOURCE $(DEBUG)
 
 FILES = $(C_SRC) $(HEADERS)
 
-include ../Makefile.lcl
+include $(MAKEOPT)
 
 default : $(TARGET)
 

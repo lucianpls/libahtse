@@ -30,7 +30,7 @@ libjpeg12.o	:	jpeg12-6b/libjpeg12.o
 	$(CP) $^ $@
 
 jpeg12-6b/libjpeg12.o	:
-	$(MAKE)	-C jpeg12-6b
+	$(MAKE)	-C jpeg12-6b MAKEOPT=$(MAKEOPT)
 
 install	:	$(TARGET) $(EXP_HEADERS)
 	$(SUDO) $(CP) $< $(DEST)
