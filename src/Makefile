@@ -15,7 +15,8 @@ LIBS = -ljpeg -lpng -lstdc++
 
 FILES = $(C_SRC) $(HEADERS)
 
-include Makefile.lcl
+MAKEOPT ?= Makefile.lcl
+include $(MAKEOPT)
 
 default : $(TARGET)
 
@@ -33,7 +34,7 @@ jpeg12-6b/libjpeg12.o	:
 
 install	:	$(TARGET) $(EXP_HEADERS)
 	$(SUDO) $(CP) $< $(DEST)
-	$(SUDO) $(CP) $(EXP_HEADERS) $(includedir)
+	$(SUDO) $(CP) $(EXP_HEADERS) $(EXP_INCLUDEDIR)
 
 clean	:
 	$(RM) -rf $(TARGET) $(OBJECTS) *.o 

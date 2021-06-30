@@ -130,5 +130,8 @@
     <None Include="src\jpeg12-6b\Makefile">
       <Filter>Support Files\jpeg12</Filter>
     </None>
+    <None Include="src\Makefile.lcl.example">
+      <Filter>Support Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
