@@ -87,7 +87,7 @@ DLL_PUBLIC apr_table_t* readAHTSEConfig(apr_pool_t* pool,
 
 // Initialize a raster from a kvp table
 DLL_PUBLIC const char* configRaster(apr_pool_t* pool,
-    apr_table_t* kvp, struct TiledRaster& raster);
+    apr_table_t* kvp, TiledRaster& raster);
 
 //
 // Read the empty file in a provided storage buffer

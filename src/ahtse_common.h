@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <cstring>
 #include <string>
+#include <icd_codecs.h>
 
 #define NS_AHTSE_START namespace AHTSE {
 #define NS_AHTSE_END }
@@ -133,19 +134,8 @@ struct empty_conf_t {
     char eTag[16];
 };
 
-// Separate channels and level, just in case
-struct sz {
-    int64_t x, y, z, c, l;
-    const bool operator==(const struct sz& other) const {
-        return 0 == memcmp(this, &other, sizeof(other));
-    }
-    const bool operator!=(const struct sz& other) const {
-        return !operator==(other);
-    }
-};
-
 // Works as location also
-#define sloc_t sz
+#define sloc_t sz5
 
 // Resolution set (level)
 struct rset {
@@ -177,7 +167,7 @@ DLL_PUBLIC int getBool(const char* s);
 
 // Populates size and returns null if it works, error message otherwise
 // "x y", "x y z" or "x y z c"
-DLL_PUBLIC const char* get_xyzc_size(sz* size, const char* value);
+DLL_PUBLIC const char* get_xyzc_size(ICD::sz5* size, const char* value);
 
 NS_AHTSE_END
 #endif

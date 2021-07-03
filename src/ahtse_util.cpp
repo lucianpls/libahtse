@@ -13,7 +13,6 @@
 */
 
 #define NOMINMAX 1
-#include "ahtse.h"
 #include "receive_context.h"
 
 // httpd.h includes the ap_ headers in the right order
@@ -41,28 +40,31 @@
 // The apache inflate filter doesn't activate on subrequests, it can't be used
 #include <zlib.h>
 
+#include "ahtse.h"
+
 using namespace std;
+NS_ICD_USE
 
 NS_AHTSE_START
 
 // Given a data type name, returns a data type
-AHTSEDataType getDT(const char *name)
+ICDDataType getDT(const char *name)
 {
-    if (name == nullptr) return AHTSE_Byte;
+    if (name == nullptr) return ICDT_Byte;
     if (!apr_strnatcasecmp(name, "UINT16"))
-        return AHTSE_UInt16;
+        return ICDT_UInt16;
     if (!apr_strnatcasecmp(name, "INT16") || !apr_strnatcasecmp(name, "SHORT"))
-        return AHTSE_Int16;
+        return ICDT_Int16;
     if (!apr_strnatcasecmp(name, "UINT32"))
-        return AHTSE_UInt32;
+        return ICDT_UInt32;
     if (!apr_strnatcasecmp(name, "INT32") || !apr_strnatcasecmp(name, "INT"))
-        return AHTSE_Int32;
+        return ICDT_Int32;
     if (!apr_strnatcasecmp(name, "FLOAT32") || !apr_strnatcasecmp(name, "FLOAT"))
-        return AHTSE_Float32;
+        return ICDT_Float32;
     if (!apr_strnatcasecmp(name, "FLOAT64") || !apr_strnatcasecmp(name, "DOUBLE"))
-        return AHTSE_Float64;
+        return ICDT_Float64;
     else
-        return AHTSE_Byte;
+        return ICDT_Byte;
 }
 
 IMG_T getFMT(const std::string &sfmt) {
@@ -75,23 +77,23 @@ IMG_T getFMT(const std::string &sfmt) {
     return IMG_INVALID;
 }
 
-int getTypeSize(AHTSEDataType dt, int n) {
-    static const std::unordered_map<AHTSEDataType, int> sizes = {
-        {AHTSE_Unknown, -1},
-        {AHTSE_Byte, 1},
-        {AHTSE_UInt16, 2},
-        {AHTSE_Int16, 2},
-        {AHTSE_UInt32, 4},
-        {AHTSE_Int32, 4},
-        {AHTSE_Float32, 4},
-        {AHTSE_Double, 8}
+int getTypeSize(ICDDataType dt, int n) {
+    static const std::unordered_map<ICDDataType, int> sizes = {
+        {ICDT_Unknown, -1},
+        {ICDT_Byte, 1},
+        {ICDT_UInt16, 2},
+        {ICDT_Int16, 2},
+        {ICDT_UInt32, 4},
+        {ICDT_Int32, 4},
+        {ICDT_Float32, 4},
+        {ICDT_Double, 8}
     };
     return n * ((sizes.find(dt) == sizes.end()) ? -1 : sizes.at(dt));
 }
 
 // Returns NULL if it worked as expected, returns a four integer value from 
 // "x y", "x y z" or "x y z c"
-const char *get_xyzc_size(sz *size, const char *value)
+const char *get_xyzc_size(sz5 *size, const char *value)
 {
     char *s;
     if (!(size && value))
@@ -263,7 +265,7 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
     if (nullptr != (line = apr_table_get(kvp, "MaxValue")))
         raster.max = get_value(line, &raster.has_max);
 
-    raster.format = (AHTSE_Byte == raster.datatype) ? IMG_ANY : IMG_LERC;
+    raster.format = (ICDT_Byte == raster.datatype) ? IMG_ANY : IMG_LERC;
     if (nullptr != (line = apr_table_get(kvp, "Format")))
         raster.format = getFMT(line);
 
@@ -273,7 +275,7 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
             raster.precision = get_value(line, &user_set);
         }
         if (!user_set)
-            raster.precision = raster.datatype < AHTSE_Float ? 0.5 : 0.01;
+            raster.precision = raster.datatype < ICDT_Float ? 0.5 : 0.01;
     }
 
     raster.bbox.xmin = raster.bbox.ymin = 0.0;
@@ -497,7 +499,7 @@ int sendEmptyTile(request_rec *r, const empty_conf_t &empty) {
     return sendImage(r, empty.data);
 }
 
-apr_status_t getMLRC(request_rec *r, sz &tile, int need_m) {
+apr_status_t getMLRC(request_rec *r, sz5 &tile, int need_m) {
     auto *tokens = tokenize(r->pool, r->uri);
     if (tokens->nelts < 3 || (need_m && tokens->nelts < 4))
         return APR_BADARG;
@@ -736,7 +738,7 @@ int subr::fetch(const char *url, storage_manager& dst) {
     return failed ? HTTP_NOT_FOUND : APR_SUCCESS;
 }
 
-DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, sz tile, const char* suffix) {
+DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, sz5 tile, const char* suffix) {
     if (!src || !strlen(src))
         return nullptr; // Error
     const char* slash = src[strlen(src)-1] == '/' ? "" : "/";
@@ -850,32 +852,6 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
     } while (!failed && rctx.size != dst.size);
 
     return failed ? 0 : rctx.size;
-}
-
-const char* stride_decode(codec_params& params, storage_manager& src, void* buffer)
-{
-    const char* error_message = nullptr;
-    apr_uint32_t sig = 0;
-    memcpy(&sig, src.buffer, sizeof(sig));
-    params.format = IMG_INVALID;
-    switch (sig)
-    {
-    case JPEG_SIG:
-        error_message = jpeg_stride_decode(params, src, buffer);
-        params.format = IMG_JPEG;
-        break;
-    case PNG_SIG:
-        error_message = png_stride_decode(params, src, buffer);
-        params.format = IMG_PNG;
-        break;
-    case LERC_SIG:
-        error_message = lerc_stride_decode(params, src, buffer);
-        params.format = IMG_LERC;
-        break;
-    default:
-        error_message = "Decode requested for unknown format";
-    }
-    return error_message;
 }
 
 NS_AHTSE_END
