@@ -179,7 +179,7 @@ static void init_rsets(apr_pool_t *pool, TiledRaster &raster) {
     // That way rset[0] matches the level 0
     // These are the MRF levels, some of the top ones might be skipped
     rset *r = &raster.rsets[raster.n_levels - 1];
-    for (int i = 0; i < raster.n_levels; i++) {
+    for (size_t i = 0; i < raster.n_levels; i++) {
         *r-- = level;
         level.tiles += raster.size.z * level.w * level.h;
         level.w = 1 + (level.w - 1) / 2;
