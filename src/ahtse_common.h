@@ -97,7 +97,7 @@ struct rset {
     // Resolution, units per pixel
     double rx, ry;
     // In tiles
-    int w, h;
+    size_t w, h;
     // level starting offset, in tiles
     uint64_t tiles;
 };
@@ -110,8 +110,8 @@ struct TiledRaster : public ICD::Raster {
     ICD::sz5 pagesize;
     size_t maxtilesize; // In bytes
 
-    int n_levels;
-    int skip; // For ahtse addressing
+    size_t n_levels;
+    size_t skip; // For ahtse addressing
     rset* rsets;
 
     // Geo information
