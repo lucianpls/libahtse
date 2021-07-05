@@ -209,13 +209,11 @@ static double get_value(const char *s, int *has) {
 
 // Consistency checks
 static const char* checkRaster(const TiledRaster& raster) {
-    if (IMG_INVALID == raster.format)
+    if (IMG_INVALID <= raster.format)
         return "Invalid format";
 
-    if (IMG_PNG == raster.format) {
-        if (2 < getTypeSize(raster.datatype))
-            return "Invalid DataType for PNG";
-    }
+    if (IMG_PNG == raster.format && 2 < getTypeSize(raster.dt))
+        return "Invalid DataType for PNG";
 
     return nullptr;
 }
@@ -247,7 +245,7 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
     }
 
     // This sets Byte as the default
-    raster.datatype = getDT(apr_table_get(kvp, "DataType"));
+    raster.dt = getDT(apr_table_get(kvp, "DataType"));
 
     // Following fields are optional, sometimes ignored on purpose
     if (nullptr != (line = apr_table_get(kvp, "SkippedLevels")))
@@ -265,7 +263,7 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
     if (nullptr != (line = apr_table_get(kvp, "MaxValue")))
         raster.max = get_value(line, &raster.has_max);
 
-    raster.format = (ICDT_Byte == raster.datatype) ? IMG_ANY : IMG_LERC;
+    raster.format = (ICDT_Byte == raster.dt) ? IMG_ANY : IMG_LERC;
     if (nullptr != (line = apr_table_get(kvp, "Format")))
         raster.format = getFMT(line);
 
@@ -275,7 +273,7 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
             raster.precision = get_value(line, &user_set);
         }
         if (!user_set)
-            raster.precision = raster.datatype < ICDT_Float ? 0.5 : 0.01;
+            raster.precision = raster.dt < ICDT_Float ? 0.5 : 0.01;
     }
 
     raster.bbox.xmin = raster.bbox.ymin = 0.0;
@@ -477,8 +475,8 @@ int sendImage(request_rec *r, const storage_manager &src, const char *mime_type)
     }
 
     // Finally, the data itself
-    ap_set_content_length(r, src.size);
-    ap_rwrite(src.buffer, src.size, r);
+    ap_set_content_length(r, static_cast<apr_off_t>(src.size));
+    ap_rwrite(src.buffer, static_cast<int>(src.size), r);
     ap_rflush(r);
     // Response is done
     return OK;
@@ -640,8 +638,8 @@ int subr::fetch(const char *url, storage_manager& dst) {
     uint64_t evalue = 0;
     int missing = 0;
     do {
-        rctx.buffer = dst.buffer;
-        rctx.maxsize = dst.size;
+        rctx.buffer = static_cast<char *>(dst.buffer);
+        rctx.maxsize = static_cast<int>(dst.size);
         rctx.size = 0;
 
         request_rec* sr = ap_sub_req_lookup_uri(url, main, main->output_filters);
@@ -710,8 +708,8 @@ int subr::fetch(const char *url, storage_manager& dst) {
     if (GZIP_SIG == sig) { // !failed is implicit, so we can return
         // Try using the reminder of the buffer
         storage_manager zipdest;
-        zipdest.buffer = dst.buffer + dst.size;
-        zipdest.size = rctx.maxsize - dst.size;
+        zipdest.buffer = static_cast<uint8_t *>(dst.buffer) + dst.size;
+        zipdest.size = static_cast<size_t>(rctx.maxsize) - dst.size;
 
         if (!ungzip(dst, zipdest)) {
             // Maybe too large, allocate a new buffer, unpack there, then copy data back
@@ -766,8 +764,8 @@ int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
         return sr->status;
 
     receive_ctx rctx;
-    rctx.buffer = dst.buffer;
-    rctx.maxsize = dst.size;
+    rctx.buffer = static_cast<char *>(dst.buffer);
+    rctx.maxsize = static_cast<int>(dst.size);
     rctx.size = 0;
     rctx.overflow = 0;
 
@@ -813,8 +811,8 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
     }
 
     receive_ctx rctx;
-    rctx.buffer = dst.buffer;
-    rctx.maxsize = dst.size;
+    rctx.buffer = static_cast<char *>(dst.buffer);
+    rctx.maxsize = static_cast<int>(dst.size);
     rctx.size = 0;
 
     char *srange = apr_psprintf(r->pool,

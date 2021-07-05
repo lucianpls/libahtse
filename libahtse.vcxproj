@@ -146,7 +146,7 @@ copy /y src\ahtse.h \Apache24\include</Command>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libhttpd.lib;libapr.lib;jpeg.lib;libjpeg12.lib;libpng.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libhttpd.lib;libapr.lib;libicd.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt;msvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
     <PreBuildEvent>
@@ -161,7 +161,6 @@ copy /y $(TargetDir)$(Targetname).lib \Apache24\lib
 copy /y $(TargetDir)$(Targetname).pdb \Apache24\lib
 
 copy /y src\ahtse_common.h \Apache24\include
-copy /y src\ahtse_codecs.h \Apache24\include
 copy /y src\ahtse_httpd.h \Apache24\include
 copy /y src\ahtse.h \Apache24\include</Command>
     </PostBuildEvent>
