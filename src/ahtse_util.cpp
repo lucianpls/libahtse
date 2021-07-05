@@ -847,7 +847,7 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
                 failed = true;
             }
         }
-    } while (!failed && rctx.size != dst.size);
+    } while (!failed && rctx.size != static_cast<int>(dst.size));
 
     return failed ? 0 : rctx.size;
 }
