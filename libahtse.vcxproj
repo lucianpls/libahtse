@@ -20,42 +20,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ahtse_util.cpp" />
-    <ClCompile Include="src\JPEG12.cpp" />
-    <ClCompile Include="src\JPEG8.cpp" />
-    <ClCompile Include="src\JPEG_codec.cpp" />
-    <ClCompile Include="src\Lerc1Image.cpp" />
-    <ClCompile Include="src\LERC_codec.cpp" />
-    <ClCompile Include="src\Packer_RLE.cpp" />
-    <ClCompile Include="src\PNG_codec.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ahtse.h" />
-    <ClInclude Include="src\ahtse_codecs.h" />
     <ClInclude Include="src\ahtse_common.h" />
     <ClInclude Include="src\ahtse_httpd.h" />
-    <ClInclude Include="src\BitMask2D.h" />
-    <ClInclude Include="src\jpeg12-6b\cderror.h" />
-    <ClInclude Include="src\jpeg12-6b\jchuff.h" />
-    <ClInclude Include="src\jpeg12-6b\jconfig.h" />
-    <ClInclude Include="src\jpeg12-6b\jdct.h" />
-    <ClInclude Include="src\jpeg12-6b\jdhuff.h" />
-    <ClInclude Include="src\jpeg12-6b\jerror.h" />
-    <ClInclude Include="src\jpeg12-6b\jinclude.h" />
-    <ClInclude Include="src\jpeg12-6b\jmemsys.h" />
-    <ClInclude Include="src\jpeg12-6b\jmorecfg.h" />
-    <ClInclude Include="src\jpeg12-6b\jpegint.h" />
-    <ClInclude Include="src\jpeg12-6b\jpeglib.h" />
-    <ClInclude Include="src\jpeg12-6b\jversion.h" />
-    <ClInclude Include="src\JPEG_codec.h" />
-    <ClInclude Include="src\Lerc1Image.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitattributes" />
     <None Include=".gitignore" />
     <None Include="LICENSE" />
     <None Include="README.md" />
-    <None Include="src\jpeg12-6b\Makefile" />
-    <None Include="src\jpeg12-6b\makefile.vc" />
     <None Include="src\Makefile" />
     <None Include="src\Makefile.lcl.example" />
   </ItemGroup>
@@ -171,14 +146,12 @@ copy /y src\ahtse.h \Apache24\include</Command>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libhttpd.lib;libapr.lib;jpeg.lib;libjpeg12.lib;libpng.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libhttpd.lib;libapr.lib;libicd.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt;msvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
     <PreBuildEvent>
-      <Command>cd $(ProjectDir)src\jpeg12-6b
-nmake /f Makefile.vc clean
-nmake /f Makefile.vc libjpeg12.lib
-copy /y libjpeg12.lib ..</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>copy /y $(TargetPath) \Apache24\modules
@@ -188,7 +161,6 @@ copy /y $(TargetDir)$(Targetname).lib \Apache24\lib
 copy /y $(TargetDir)$(Targetname).pdb \Apache24\lib
 
 copy /y src\ahtse_common.h \Apache24\include
-copy /y src\ahtse_codecs.h \Apache24\include
 copy /y src\ahtse_httpd.h \Apache24\include
 copy /y src\ahtse.h \Apache24\include</Command>
     </PostBuildEvent>

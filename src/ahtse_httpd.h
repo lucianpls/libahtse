@@ -87,7 +87,7 @@ DLL_PUBLIC apr_table_t* readAHTSEConfig(apr_pool_t* pool,
 
 // Initialize a raster from a kvp table
 DLL_PUBLIC const char* configRaster(apr_pool_t* pool,
-    apr_table_t* kvp, struct TiledRaster& raster);
+    apr_table_t* kvp, TiledRaster& raster);
 
 //
 // Read the empty file in a provided storage buffer
@@ -96,7 +96,7 @@ DLL_PUBLIC const char* configRaster(apr_pool_t* pool,
 // Maximum read size is set by MAX_READ_SIZE macro
 // The line can contain the size and offset, white space separated, before the file name
 //
-DLL_PUBLIC char* readFile(apr_pool_t* pool, storage_manager& empty, const char* line);
+DLL_PUBLIC char* readFile(apr_pool_t* pool, ICD::storage_manager& empty, const char* line);
 
 // Returns true if one of the regexps compiled in the array match the full request, 
 // including args
@@ -106,7 +106,7 @@ DLL_PUBLIC bool requestMatches(request_rec* r, apr_array_header_t* arr);
 DLL_PUBLIC apr_array_header_t* tokenize(apr_pool_t* p, const char* src, char sep = '/');
 
 // Get 3 or 4 numerical parameters from the end of the request uri
-DLL_PUBLIC apr_status_t getMLRC(request_rec* r, sz& tile, int need_m = 0);
+DLL_PUBLIC apr_status_t getMLRC(request_rec* r, ICD::sz5& tile, int need_m = 0);
 
 // returns true if the If-None-Match request etag matches
 DLL_PUBLIC int etagMatches(request_rec* r, const char* ETag);
@@ -117,7 +117,7 @@ DLL_PUBLIC int etagMatches(request_rec* r, const char* ETag);
 // Does not handle conditional response or setting ETags, those should already be set
 // src.buffer should hold at least 4 bytes
 DLL_PUBLIC int sendImage(request_rec* r,
-    const storage_manager& src, const char* mime_type = nullptr);
+    const ICD::storage_manager& src, const char* mime_type = nullptr);
 
 // Called with an empty tile configuration, send the empty tile with the proper ETag
 // Handles conditional requests
@@ -150,7 +150,7 @@ struct subr {
     subr(request_rec* r) : main(r), tries(4) {};
 
     // Returns APR_SUCCESS or HTTP error code
-    DLL_PUBLIC int fetch(const char* url, storage_manager& dst);
+    DLL_PUBLIC int fetch(const char* url, ICD::storage_manager& dst);
 
     std::string agent; // input
     std::string error_message;
@@ -161,27 +161,27 @@ struct subr {
 };
 
 // Builds a MLRC URL to fetch a tile
-DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, sz tile, const char* suffix);
+DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, ICD::sz5 tile, const char* suffix);
 
 //
 // Issues a subrequest to the local path and returns the content and the ETag
 // Returns APR_SUCESS instead of HTTP_OK, otherwise source http response
 // Returns HTTP_INTERNAL_SERVER_ERROR if mod_receive is not available
-// The *psETag is allocated from r->pool, if psETag != NULL
+// The *psETag is allocated from r->pool, if psETag != nullptr
 //
-DLL_PUBLIC int get_response(request_rec* r, const char* lcl_path, storage_manager& dst,
-    char** psETag = NULL);
+DLL_PUBLIC int get_response(request_rec* r, const char* lcl_path, ICD::storage_manager& dst,
+    char** psETag = nullptr);
 
 // Builds an MLRC uri, suffix optional, returns "/tile</m>/L/R/C" string
 DLL_PUBLIC char* pMLRC(apr_pool_t* pool, const char* prefix, const sloc_t& tile,
-    const char* suffix = NULL);
+    const char* suffix = nullptr);
 
 // Like get_response, but using the tile location to generate the local path
 // using the M/L/R/C notation
 
 // Builds and issues an MLRC uri, using pMLRC and get_response
 static inline int get_remote_tile(request_rec* r, const char* remote, const sloc_t& tile,
-    storage_manager& dst, char** psETag, const char* suffix)
+    ICD::storage_manager& dst, char** psETag, const char* suffix)
 {
     return get_response(r, pMLRC(r->pool, remote, tile, suffix), dst, psETag);
 }
@@ -190,7 +190,7 @@ static inline int get_remote_tile(request_rec* r, const char* remote, const sloc
 // Returns the number of bytes read or 0 on error
 // If msg is not null, *msg on return will be a error message string
 DLL_PUBLIC int range_read(request_rec* r, const char* url, apr_off_t offset,
-    storage_manager& dst, int tries = 4, const char** msg = nullptr);
+    ICD::storage_manager& dst, int tries = 4, const char** msg = nullptr);
 
 /*  TEMPLATES
  */

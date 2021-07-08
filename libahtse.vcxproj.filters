@@ -13,92 +13,17 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\jpeg12">
-      <UniqueIdentifier>{6f499be3-b1e9-422e-93b8-3ff043d643c0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Support Files">
       <UniqueIdentifier>{e480f38a-7507-468e-81c8-4579459dabfa}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Support Files\jpeg12">
-      <UniqueIdentifier>{e672ff4d-0e22-4954-92bb-f2d0a9e3bb07}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ahtse_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\JPEG_codec.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\JPEG8.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\JPEG12.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Packer_RLE.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PNG_codec.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Lerc1Image.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\LERC_codec.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\BitMask2D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\JPEG_codec.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\cderror.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\jchuff.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\jconfig.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\jdct.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\jdhuff.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\jerror.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\jinclude.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\jmemsys.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\jmorecfg.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\jpegint.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\jpeglib.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\jpeg12-6b\jversion.h">
-      <Filter>Header Files\jpeg12</Filter>
-    </ClInclude>
     <ClInclude Include="src\ahtse.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Lerc1Image.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ahtse_codecs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ahtse_httpd.h">
@@ -121,14 +46,8 @@
     <None Include=".gitignore">
       <Filter>Support Files</Filter>
     </None>
-    <None Include="src\jpeg12-6b\makefile.vc">
-      <Filter>Support Files\jpeg12</Filter>
-    </None>
     <None Include="src\Makefile">
       <Filter>Support Files</Filter>
-    </None>
-    <None Include="src\jpeg12-6b\Makefile">
-      <Filter>Support Files\jpeg12</Filter>
     </None>
     <None Include="src\Makefile.lcl.example">
       <Filter>Support Files</Filter>

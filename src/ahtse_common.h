@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <cstring>
 #include <string>
+#include <icd_codecs.h>
 
 #define NS_AHTSE_START namespace AHTSE {
 #define NS_AHTSE_END }
@@ -25,10 +26,19 @@
 // Default behavior is system depenent
 //
 
+#ifdef DLL_PUBLIC
+#undef DLL_PUBLIC
+#endif
+
+#ifdef DLL_LOCAL
+#undef DLL_LOCAL
+#endif
+
 #if defined _WIN32 || defined __CYGWIN__
 #define DLL_LOCAL
 
 #ifdef LIBAHTSE_EXPORTS
+
 #ifdef __GNUC__
 #define DLL_PUBLIC __attribute__ ((dllexport))
 #else
@@ -63,51 +73,6 @@
 #else
 #endif
 
-#if IS_BIGENDIAN // Big endian, do nothing
-
-// These values are big endian
-#define PNG_SIG 0x89504e47
-#define JPEG_SIG 0xffd8ffe0
-
-// Lerc is only supported on little endian
-#define LERC_SIG 0x436e745a
-
-// This one is not an image type, but an encoding
-#define GZIP_SIG 0x1f8b0800
-
-#else // Little endian
-
-// For formats that need net order, equivalent to !IS_BIGENDIAN
-#define NEED_SWAP
-
-#if defined(_WIN32)
-// Windows is always little endian, supply functions to swap bytes
- // These are defined in <cstdlib>
-#define htobe16 _byteswap_ushort
-#define be16toh _byteswap_ushort
-#define htobe32 _byteswap_ulong
-#define be32toh _byteswap_ulong
-#define htobe64 _byteswap_uint64
-#define be64toh _byteswap_uint64
-
-#define le64toh(X) (X)
-#define htole64(X) (X)
-
-#else
-// Assume linux
-#include <endian.h>
-
-#endif
-
-#define PNG_SIG  0x474e5089
-#define JPEG_SIG 0xe0ffd8ff
-#define LERC_SIG 0x5a746e43
-
-// This one is not an image type, but an encoding
-#define GZIP_SIG 0x00088b1f
-
-#endif
-
 NS_AHTSE_START
 
 // The maximum size of a tile
@@ -116,49 +81,51 @@ NS_AHTSE_START
 // Accept empty tiles up to this size
 #define MAX_READ_SIZE (1024*1024)
 
-struct storage_manager {
-    storage_manager(void) : buffer(nullptr), size(0) {}
-    storage_manager(void* ptr, size_t sz) :
-        buffer(reinterpret_cast<char*>(ptr)),
-        size(static_cast<int>(sz)) {}
-    char* buffer;
-    int size;
-};
-
 // Empty tile runtime object
 struct empty_conf_t {
     // Empty tile in RAM, if defined
-    storage_manager data;
+    ICD::storage_manager data;
     // Buffer for the empty tile etag
     char eTag[16];
 };
 
-// Separate channels and level, just in case
-struct sz {
-    int64_t x, y, z, c, l;
-    const bool operator==(const struct sz& other) const {
-        return 0 == memcmp(this, &other, sizeof(other));
-    }
-    const bool operator!=(const struct sz& other) const {
-        return !operator==(other);
-    }
-};
-
 // Works as location also
-#define sloc_t sz
+#define sloc_t ICD::sz5
 
 // Resolution set (level)
 struct rset {
     // Resolution, units per pixel
     double rx, ry;
     // In tiles
-    int w, h;
+    size_t w, h;
     // level starting offset, in tiles
     uint64_t tiles;
 };
 
 // Bounding box
 struct bbox_t { double xmin, ymin, xmax, ymax; };
+
+// Tile and pyramid raster, with some metadata
+struct TiledRaster : public ICD::Raster {
+    ICD::sz5 pagesize;
+    size_t maxtilesize; // In bytes
+
+    size_t n_levels;
+    size_t skip; // For ahtse addressing
+    rset* rsets;
+
+    // Geo information
+    std::string projection;
+    bbox_t bbox;
+
+    // HTTP
+    uint64_t seed;
+    empty_conf_t missing;
+
+    // Potentially format specific metadata
+    // LERC
+    double precision;
+};
 
 // From a string in base32 returns a 64 + 1 bit integer
 // The b65 is the lowest bit of first character, as if it would be in position 60
@@ -177,7 +144,7 @@ DLL_PUBLIC int getBool(const char* s);
 
 // Populates size and returns null if it works, error message otherwise
 // "x y", "x y z" or "x y z c"
-DLL_PUBLIC const char* get_xyzc_size(sz* size, const char* value);
+DLL_PUBLIC const char* get_xyzc_size(ICD::sz5* size, const char* value);
 
 NS_AHTSE_END
 #endif
