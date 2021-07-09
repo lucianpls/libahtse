@@ -11,7 +11,7 @@ CXXFLAGS = -fPIC -O2 -Wall
 
 DEFINES = -DLINUX -D_REENTRANT -D_GNU_SOURCE $(DEBUG)
 
-LIBS = -lstdc++
+LIBS = -L $(PREFIX)/lib -licd
 
 FILES = $(C_SRC) $(HEADERS)
 
@@ -21,7 +21,7 @@ include $(MAKEOPT)
 default : $(TARGET)
 
 $(TARGET)	:	$(OBJECTS) $(HEADERS)
-	$(CC) -shared -o $@ $(OBJECTS)
+	$(CXX) -shared -o $@ $(OBJECTS) $(LIBS)
 
 %.o	:	%.cpp $(HEADERS)
 	$(CXX) -std=c++0x $(CXXFLAGS) $(DEFINES) -I . $(EXTRA_INCLUDES) -I $(EXP_INCLUDEDIR) -pthread -c $< -o $@
