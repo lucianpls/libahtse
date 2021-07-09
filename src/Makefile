@@ -21,7 +21,7 @@ include $(MAKEOPT)
 default : $(TARGET)
 
 $(TARGET)	:	$(OBJECTS) $(HEADERS)
-	$(CC) -shared -o $@ $(OBJECTS)
+	$(CXX) -shared -o $@ $(OBJECTS) -L $(PREFIX)/lib -licd
 
 %.o	:	%.cpp $(HEADERS)
 	$(CXX) -std=c++0x $(CXXFLAGS) $(DEFINES) -I . $(EXTRA_INCLUDES) -I $(EXP_INCLUDEDIR) -pthread -c $< -o $@
