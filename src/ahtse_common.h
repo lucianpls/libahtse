@@ -106,6 +106,7 @@ struct rset {
 struct bbox_t { double xmin, ymin, xmax, ymax; };
 
 // Tile and pyramid raster, with some metadata
+// Does not contain C++ objects
 struct TiledRaster : public ICD::Raster {
     ICD::sz5 pagesize;
     size_t maxtilesize; // In bytes
@@ -115,7 +116,7 @@ struct TiledRaster : public ICD::Raster {
     rset* rsets;
 
     // Geo information
-    std::string projection;
+    const char *projection;
     bbox_t bbox;
 
     // HTTP

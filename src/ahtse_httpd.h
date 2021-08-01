@@ -85,7 +85,7 @@ DLL_PUBLIC const char* add_regexp_to_array(apr_pool_t* pool,
 DLL_PUBLIC apr_table_t* readAHTSEConfig(apr_pool_t* pool,
     const char* fname, const char** err_message);
 
-// Initialize a raster from a kvp table
+// Initialize a raster structure from a temporary kvp table
 DLL_PUBLIC const char* configRaster(apr_pool_t* pool,
     apr_table_t* kvp, TiledRaster& raster);
 
