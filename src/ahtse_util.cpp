@@ -32,9 +32,7 @@
 // setlocale
 #include <clocale>
 #include <cstring>
-
 #include <algorithm>
-#include <unordered_map>
 
 // Need zlib to ungzip compressed input
 // The apache inflate filter doesn't activate on subrequests, it can't be used
@@ -46,50 +44,6 @@ using namespace std;
 NS_ICD_USE
 
 NS_AHTSE_START
-
-// Given a data type name, returns a data type
-ICDDataType getDT(const char *name)
-{
-    if (name == nullptr) return ICDT_Byte;
-    if (!apr_strnatcasecmp(name, "UINT16"))
-        return ICDT_UInt16;
-    if (!apr_strnatcasecmp(name, "INT16") || !apr_strnatcasecmp(name, "SHORT"))
-        return ICDT_Int16;
-    if (!apr_strnatcasecmp(name, "UINT32"))
-        return ICDT_UInt32;
-    if (!apr_strnatcasecmp(name, "INT32") || !apr_strnatcasecmp(name, "INT"))
-        return ICDT_Int32;
-    if (!apr_strnatcasecmp(name, "FLOAT32") || !apr_strnatcasecmp(name, "FLOAT"))
-        return ICDT_Float32;
-    if (!apr_strnatcasecmp(name, "FLOAT64") || !apr_strnatcasecmp(name, "DOUBLE"))
-        return ICDT_Float64;
-    else
-        return ICDT_Byte;
-}
-
-IMG_T getFMT(const std::string &sfmt) {
-    if (sfmt == "image/jpeg")
-        return IMG_JPEG;
-    if (sfmt == "image/png")
-        return IMG_PNG;
-    if (sfmt == "raster/lerc")
-        return IMG_LERC;
-    return IMG_INVALID;
-}
-
-int getTypeSize(ICDDataType dt, int n) {
-    static const std::unordered_map<ICDDataType, int> sizes = {
-        {ICDT_Unknown, -1},
-        {ICDT_Byte, 1},
-        {ICDT_UInt16, 2},
-        {ICDT_Int16, 2},
-        {ICDT_UInt32, 4},
-        {ICDT_Int32, 4},
-        {ICDT_Float32, 4},
-        {ICDT_Double, 8}
-    };
-    return n * ((sizes.find(dt) == sizes.end()) ? -1 : sizes.at(dt));
-}
 
 // Returns NULL if it worked as expected, returns a four integer value from 
 // "x y", "x y z" or "x y z c"
@@ -209,7 +163,7 @@ static double get_value(const char *s, int *has) {
 
 // Consistency checks
 static const char* checkRaster(const TiledRaster& raster) {
-    if (IMG_INVALID <= raster.format)
+    if (IMG_UNKNOWN <= raster.format)
         return "Invalid format";
 
     if (IMG_PNG == raster.format && 2 < getTypeSize(raster.dt))

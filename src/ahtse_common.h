@@ -125,6 +125,9 @@ struct TiledRaster : public ICD::Raster {
     // Potentially format specific metadata
     // LERC
     double precision;
+    size_t pagebytes() const {
+        return getTypeSize(dt) * pagesize.x * pagesize.y * pagesize.c;
+    }
 };
 
 // From a string in base32 returns a 64 + 1 bit integer
