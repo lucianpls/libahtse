@@ -206,7 +206,7 @@ const char *configRaster(apr_pool_t *pool, apr_table_t *kvp, TiledRaster &raster
         raster.skip = int(apr_atoi64(line));
 
     line = apr_table_get(kvp, "Projection");
-    raster.projection = line ? apr_pstrdup(pool, line) : "SELF";
+    raster.projection = line ? line : "SELF";
 
     if (nullptr != (line = apr_table_get(kvp, "NoDataValue")))
         raster.ndv = get_value(line, &raster.has_ndv);
