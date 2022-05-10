@@ -713,6 +713,7 @@ int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     }
 
     request_rec *sr = ap_sub_req_lookup_uri(lcl_path, r, r->output_filters);
+    apr_table_clear(sr->headers_in); // Sanitize input headers
     // if status is not 200 here, no point in going further
     if (sr->status != HTTP_OK)
         return sr->status;
@@ -777,6 +778,7 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
     bool failed = false;
     do {
         request_rec *sr = ap_sub_req_lookup_uri(url, r, r->output_filters);
+        apr_table_clear(sr->headers_in); // Sanitize inputs
         apr_table_setn(sr->headers_in, "Range", srange);
         ap_filter_t *rf = ap_add_output_filter_handle(receive_filter, &rctx,
             sr, sr->connection);
