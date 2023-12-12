@@ -97,7 +97,8 @@
     <TargetExt>.so</TargetExt>
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
-    <LibraryPath>src\jpeg12-6b;\Apache24\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <LibraryPath>\HTTPD\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <IncludePath>src;\HTTPD\include;\HTTPD\include\apr-2;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -141,12 +142,13 @@ copy /y src\ahtse.h \Apache24\include</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;LIBAHTSE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>src;\Apache24\include;jpeg;png</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libhttpd.lib;libapr.lib;libicd.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libhttpd.lib;libapr-2.lib;libicd.lib;zlibstatic.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt;msvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
     <PreBuildEvent>
@@ -154,15 +156,15 @@ copy /y src\ahtse.h \Apache24\include</Command>
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy /y $(TargetPath) \Apache24\modules
+      <Command>copy /y $(TargetPath) \HTTPD\modules
 
-copy /y $(TargetDir)$(Targetname).lib \Apache24\lib
+copy /y $(TargetDir)$(Targetname).lib \HTTPD\lib
 
-copy /y $(TargetDir)$(Targetname).pdb \Apache24\lib
+copy /y $(TargetDir)$(Targetname).pdb \HTTPD\lib
 
-copy /y src\ahtse_common.h \Apache24\include
-copy /y src\ahtse_httpd.h \Apache24\include
-copy /y src\ahtse.h \Apache24\include</Command>
+copy /y src\ahtse_common.h \HTTPD\include
+copy /y src\ahtse_httpd.h \HTTPD\include
+copy /y src\ahtse.h \HTTPD\include</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
