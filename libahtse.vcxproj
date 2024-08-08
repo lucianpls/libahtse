@@ -126,6 +126,17 @@ copy /y src\ahtse.h $(prefix)\include</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>libhttpd.lib;libapr-2.lib;libicd.lib;zlibstatic.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y $(TargetPath) $(prefix)\modules
+
+copy /y $(TargetDir)$(Targetname).lib $(prefix)\lib
+
+copy /y $(TargetDir)$(Targetname).pdb $(prefix)\lib
+
+copy /y src\ahtse_common.h $(prefix)\include
+copy /y src\ahtse_httpd.h $(prefix)\include
+copy /y src\ahtse.h $(prefix)\include</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

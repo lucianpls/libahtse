@@ -203,12 +203,12 @@ template<typename T> static T* get_conf(request_rec* const r, const module* cons
 }
 
 // build an object on pool, suitable for "create_dir_conf"
-template<typename T> static void* pcreate(apr_pool_t* p, char* /* path */) {
+template<typename T> void* pcreate(apr_pool_t* p, char* /* path */) {
     return apr_pcalloc(p, sizeof(T));
 }
 
 // command function to set the source and suffix fields in an ahtse module configuration
-template<typename T> static const char* set_source(cmd_parms* cmd, T* cfg,
+template<typename T> const char* set_source(cmd_parms* cmd, T* cfg,
     const char* src, const char* suffix)
 {
     cfg->source = apr_pstrdup(cmd->pool, src);
@@ -218,7 +218,7 @@ template<typename T> static const char* set_source(cmd_parms* cmd, T* cfg,
 }
 
 // command function to add a regexp to the configuration
-template<typename T> static const char* set_regexp(cmd_parms* cmd, T* cfg, const char* pattern) {
+template<typename T> const char* set_regexp(cmd_parms* cmd, T* cfg, const char* pattern) {
     return add_regexp_to_array(cmd->pool, &cfg->arr_rxp, pattern);
 }
 
