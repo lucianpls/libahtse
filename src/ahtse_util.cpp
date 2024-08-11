@@ -528,7 +528,7 @@ apr_hash_t *argparse(request_rec *r, const char *raw_args, const char *sep, bool
 
 // Mostly copied from mrf_util.cpp:ZUnPack()
 // return true if all is OK
-static int ungzip(const storage_manager& src, storage_manager& dst) {
+static int gunzip(const storage_manager& src, storage_manager& dst) {
     z_stream stream;
     memset(&stream, 0, sizeof(stream));
     stream.next_in = reinterpret_cast<Bytef*>(src.buffer);
@@ -610,12 +610,35 @@ int subr::fetch(const char *url, storage_manager& dst) {
         const char *intag = apr_table_get(sr->headers_out, "ETag");
         if (intag)
             evalue = base32decode(intag, &missing);
+        const char* location = nullptr;
+        // Get a copy of the location header
+        if (sr_status == HTTP_MOVED_PERMANENTLY || sr_status == HTTP_MOVED_TEMPORARILY)
+            location = apr_pstrdup(main->pool, apr_table_get(sr->headers_out, "Location"));
 
         ap_remove_output_filter(rf);
         ap_destroy_sub_req(sr);
 
         if (APR_SUCCESS != status) {
             failed = true; // the request didn't work!
+            break;
+        }
+
+        // Handle redirects, strip the protocol and host added by mod_proxy, keep only the path
+        if (location && (location = strstr(location, "//")) && (location = strchr(location + 2, '/'))) {
+            // counts as a retry, avoid infinite loops
+            if (0 == tries--) {
+                error_message = "Too many redirects";
+                failed = true;
+                break;
+            }
+            url = location;
+            continue;
+        }
+
+        // If we still have a location, it's a bad redirect
+        if (location) {
+            error_message = "Bad redirect";
+            failed = true;
             break;
         }
 
@@ -630,6 +653,7 @@ int subr::fetch(const char *url, storage_manager& dst) {
         case HTTP_OK:
             break;
         case HTTP_PARTIAL_CONTENT: // The only time we retry
+        case HTTP_BAD_GATEWAY:
             if (0 == tries--) {
                 error_message = "Retries exhausted";
                 failed = true;
@@ -665,18 +689,18 @@ int subr::fetch(const char *url, storage_manager& dst) {
         zipdest.buffer = static_cast<uint8_t *>(dst.buffer) + dst.size;
         zipdest.size = static_cast<size_t>(rctx.maxsize) - dst.size;
 
-        if (!ungzip(dst, zipdest)) {
+        if (!gunzip(dst, zipdest)) {
             // Maybe too large, allocate a new buffer, unpack there, then copy data back
             // the unpacked size still needs to be under the input dest buffer max size
             if (dst.size < 0) { // Output buffer was too small
                 zipdest.size = rctx.maxsize;
                 zipdest.buffer = reinterpret_cast<char*>(apr_palloc(main->pool, zipdest.size));
-                failed = !ungzip(dst, zipdest);
+                failed = !gunzip(dst, zipdest);
                 if (failed)
                     error_message = "Uncompressed output buffer too small";
             }
             else { // Some other unzip error
-                error_message = "ungzip error";
+                error_message = "gunzip error";
                 failed = true;
             }
         }
