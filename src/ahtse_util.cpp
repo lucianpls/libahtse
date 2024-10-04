@@ -775,18 +775,15 @@ char *pMLRC(apr_pool_t *pool, const char *prefix, const sloc_t &tile, const char
     return apr_pstrcat(pool, prefix, "/tile", stile, suffix, NULL);
 }
 
-int range_read(request_rec *r, const char *url, apr_off_t offset,
+apr_size_t range_read(request_rec *r, const char *url, apr_off_t offset,
     storage_manager &dst, int tries, const char **msg)
 {
-    ap_filter_rec_t *receive_filter = nullptr;
-    ap_get_output_filter_handle("Receive");
+    // Could this be static?
+    auto receive_filter = ap_get_output_filter_handle("Receive");
     if (!receive_filter) {
-        receive_filter = ap_get_output_filter_handle("Receive");
-        if (!receive_filter) {
-            if (msg)
-                *msg = "Receive filter not found";
-            return 0; // Receive not found
-        }
+        if (msg)
+            *msg = "Receive filter not found";
+        return 0; // Receive not found
     }
 
     receive_ctx rctx;
@@ -800,6 +797,7 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
 
     // S3 may return less than requested, so we retry the request a couple of times
     bool failed = false;
+    apr_size_t size = 0;
     do {
         request_rec *sr = ap_sub_req_lookup_uri(url, r, r->output_filters);
         apr_table_clear(sr->headers_in); // Sanitize inputs
@@ -809,6 +807,11 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
         int status = ap_run_sub_req(sr);
         int sr_status = sr->status;
         ap_remove_output_filter(rf);
+        // retrieve and return the file size from the Range response header
+        const char* content_range = apr_table_get(sr->headers_out, "Content-Range");
+        if (content_range)
+            if (1 != sscanf(content_range, "bytes %*d-%*d/%" APR_SIZE_T_FMT, &size))
+                size = 0;
         ap_destroy_sub_req(sr);
 
         failed = !(APR_SUCCESS == status);
@@ -816,20 +819,23 @@ int range_read(request_rec *r, const char *url, apr_off_t offset,
             switch (sr_status) {
             case HTTP_PARTIAL_CONTENT:
                 if (0 == tries--) {
-                    *msg = "Retries exhausted";
+                    if (msg)
+                        *msg = "Retries exhausted";
                     failed = true;
                 }
             // TODO follow redirects
             case HTTP_OK:
                 break;
             default: // Any other return code is unrecoverable
-                *msg = apr_psprintf(r->pool, "Remote responds with %d", sr_status);
+                if (msg)
+                    // Do not modify this message, it might get parsed back by the caller
+                    *msg = apr_psprintf(r->pool, "Remote responds with %d", sr_status);
                 failed = true;
             }
         }
     } while (!failed && rctx.size != static_cast<int>(dst.size));
 
-    return failed ? 0 : rctx.size;
+    return failed ? 0 : size;
 }
 
 NS_AHTSE_END
