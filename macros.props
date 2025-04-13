@@ -3,6 +3,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
     <prefix>C:\httpd</prefix>
+      <apr>apr-2</apr>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup />
