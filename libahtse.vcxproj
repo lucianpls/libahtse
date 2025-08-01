@@ -88,7 +88,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libhttpd.lib;lib$(apr).lib;libicdd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libhttpd.lib;lib$(apr).lib;libicdd.lib;libpng16.lib;jpeg.lib;zlibstaticd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt;msvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
     <PreBuildEvent>

@@ -754,13 +754,21 @@ int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
         sr, sr->connection);
     auto code = ap_run_sub_req(sr); // This returns SUCCESS most of the time
     auto status = sr->status;
+    // If it's a redirect, get the location header
+	auto location = apr_table_get(sr->headers_out, "Location");
     // If code is not SUCCESS, then it is the status
     if (OK != code)
         status = code;
     dst.size = rctx.size;
     const char *sETag = apr_table_get(sr->headers_out, "ETag");
-    if (psETag && sETag)
-        *psETag = apr_pstrdup(r->pool, sETag);
+    // If we have a location return a copy in the ETag pointer
+    if (psETag && (status == HTTP_MOVED_PERMANENTLY|| status == HTTP_MOVED_TEMPORARILY)
+        && location)
+        *psETag = apr_pstrdup(r->pool, location);
+    else {
+        if (psETag && sETag)
+            *psETag = apr_pstrdup(r->pool, sETag);
+    }
     ap_remove_output_filter(rf);
     ap_destroy_sub_req(sr);
     return 200 == status ? APR_SUCCESS: status;  // returns APR_SUCCESS or http code
