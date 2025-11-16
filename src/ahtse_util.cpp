@@ -755,11 +755,14 @@ int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     auto code = ap_run_sub_req(sr); // This returns SUCCESS most of the time
     auto status = sr->status;
     // If it's a redirect, get the location header
-	auto location = apr_table_get(sr->headers_out, "Location");
+    auto location = apr_table_get(sr->headers_out, "Location");
     // If code is not SUCCESS, then it is the status
     if (OK != code)
         status = code;
-    dst.size = rctx.size;
+
+    // Only return the size if we didn't overflow
+    if (!rctx.overflow)
+        dst.size = rctx.size;
     const char *sETag = apr_table_get(sr->headers_out, "ETag");
     // If we have a location return a copy in the ETag pointer
     if (psETag && (status == HTTP_MOVED_PERMANENTLY|| status == HTTP_MOVED_TEMPORARILY)
@@ -771,6 +774,10 @@ int get_response(request_rec *r, const char *lcl_path, storage_manager &dst,
     }
     ap_remove_output_filter(rf);
     ap_destroy_sub_req(sr);
+
+    // If we had an overflow, need to return an error
+    if (rctx.overflow)
+        return 413; // HTTP_REQUEST_ENTITY_TOO_LARGE
     return 200 == status ? APR_SUCCESS: status;  // returns APR_SUCCESS or http code
 }
 
