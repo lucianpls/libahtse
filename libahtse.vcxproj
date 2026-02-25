@@ -37,13 +37,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
@@ -100,8 +100,7 @@
 
 copy /y $(TargetDir)$(Targetname).lib $(prefix)\lib
 
-copy /y $(TargetDir)$(Targetname).pdb $(prefix)\lib
-
+copy /y $(TargetDir)$(Targetname).pdb $(prefix)\modules
 copy /y src\ahtse_common.h $(prefix)\include
 copy /y src\ahtse_httpd.h $(prefix)\include
 copy /y src\ahtse.h $(prefix)\include</Command>

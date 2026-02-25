@@ -171,6 +171,8 @@ DLL_PUBLIC char* tile_url(apr_pool_t* p, const char* src, ICD::sz5 tile, const c
 //
 // If dst is too small but otherwise it was a success, the buffer is full and
 // returns 413 (HTTP_REQUEST_ENTITY_TOO_LARGE)
+// 
+// If response it a redirect, the psETag holds the response Location header
 //
 DLL_PUBLIC int get_response(request_rec* r, const char* lcl_path, ICD::storage_manager& dst,
     char** psETag = nullptr);
